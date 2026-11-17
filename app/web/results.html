@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Benchmark Results</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect x=%221%22 y=%228%22 width=%223%22 height=%227%22 fill=%22%232a78d6%22/%3E%3Crect x=%226%22 y=%224%22 width=%223%22 height=%2211%22 fill=%22%23eb6834%22/%3E%3Crect x=%2211%22 y=%221%22 width=%223%22 height=%2214%22 fill=%22%232a78d6%22/%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<style>
+:root{--bg:#f6f6f4;--card:#fff;--ink:#0b0b0b;--ink2:#52514e;--ink3:#7a7974;--line:#e4e3df;--soft:#f0efec;
+  --a:#2a78d6;--b:#eb6834;--ok:#008300;--bad:#c62828;--warn:#9a6700}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121211;--card:#1a1a19;--ink:#f0efec;--ink2:#c3c2b7;--ink3:#8f8e86;--line:#2e2e2c;--soft:#232321;
+  --a:#3987e5;--b:#d95926;--ok:#3fb950;--bad:#f0605d;--warn:#d29922}}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.5 system-ui,-apple-system,"Noto Sans KR",sans-serif;background:var(--bg);color:var(--ink)}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+header h1{font-size:15px;margin:0 8px 0 0}
+select,button,input{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:5px 10px}
+button{cursor:pointer}button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button:disabled{opacity:.5;cursor:default}
+a{color:inherit}
+nav.tabs{display:flex;gap:2px;margin-left:auto;flex-wrap:wrap}
+nav.tabs button{border:none;background:none;padding:6px 10px;border-radius:6px;color:var(--ink2)}
+nav.tabs button.on{background:var(--card);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+main{padding:16px;max-width:1280px;margin:0 auto}
+.muted{color:var(--ink2)}.small{font-size:12px}.num{font-variant-numeric:tabular-nums}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.card h2{font-size:14px;margin:0 0 10px}
+.banner{border:1px solid var(--warn);color:var(--warn);border-radius:10px;padding:8px 12px;margin-bottom:12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi .label{font-size:12px;color:var(--ink2)}
+.kpi .row{display:flex;justify-content:space-between;align-items:baseline;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi .v{font-size:18px;font-weight:600}
+.sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.sa{background:var(--a)}.sb{background:var(--b)}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;font-size:12px;color:var(--ink2);position:sticky;top:0;background:var(--card)}
+td.r,th.r{text-align:right}
+tr.click{cursor:pointer}tr.click:hover td{background:var(--soft)}
+.tbl{overflow:auto;max-height:70vh}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.pill.bad{color:var(--bad);border-color:var(--bad)}
+.pill{display:inline-block;font-size:11px;padding:0 6px;border:1px solid var(--line);border-radius:6px;margin:0 3px 2px 0;color:var(--ink2)}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:12px}
+.charts img{width:100%;border:1px solid var(--line);border-radius:10px;background:#fcfcfb}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:820px){.cols{grid-template-columns:1fr}.charts{grid-template-columns:1fr}}
+.turn{border-bottom:1px dashed var(--line);padding:8px 0}
+.turn .d{font-weight:600}.turn .agent{margin-top:3px}
+.md table{width:auto}.md img{max-width:100%}
+.md h1{font-size:20px}.md h2{font-size:16px;margin-top:22px}
+pre{white-space:pre-wrap;background:var(--soft);padding:10px;border-radius:8px;font-size:12px;max-height:50vh;overflow:auto}
+#tip{position:fixed;pointer-events:none;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;
+  box-shadow:0 4px 16px rgba(0,0,0,.12);max-width:340px;display:none;z-index:10}
+svg text{fill:var(--ink2);font-size:11px}
+.empty{padding:24px;text-align:center;color:var(--ink2)}
+</style>
+</head>
+<body>
+<header>
+  <h1>벤치마크 · 테스트 결과</h1>
+  <select id="run" aria-label="Run"></select>
+  <a class="small muted" href="/">A/B 대화 UI →</a>
+  <nav class="tabs" id="tabs">
+    <button data-t="overview" class="on">개요</button><button data-t="decisions">판단</button><button data-t="conversations">통화</button>
+    <button data-t="a2a">A2A</button><button data-t="report">리포트</button><button data-t="tests">테스트</button>
+  </nav>
+</header>
+<main id="main"><div class="empty">불러오는 중…</div></main>
+<div id="tip"></div>
+<script>
+const E=["haiku_only","jev_haiku"],LBL={haiku_only:"A. Haiku Only",jev_haiku:"B. Jev + Haiku"},SW={haiku_only:"sa",jev_haiku:"sb"};
+const $=s=>document.querySelector(s),main=$("#main"),tip=$("#tip");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ms=x=>x==null?"–":Math.round(x).toLocaleString()+" ms", pct=x=>x==null?"–":(x*100).toFixed(1)+"%";
+const usd=(x,d=6)=>x==null?"–":"$"+x.toFixed(d), n2=x=>x==null?"–":(+x).toFixed(2);
+const api=p=>fetch(p).then(r=>{if(!r.ok)throw new Error(r.status+" "+p);return r.json()});
+let RUN=null,TAB="overview",cache={};
+function state(){try{return JSON.parse(localStorage.getItem("acc-results")||"{}")}catch{return{}}}
+function save(o){try{localStorage.setItem("acc-results",JSON.stringify({...state(),...o}))}catch{}}
+async function get(kind){const k=RUN+":"+kind;if(!cache[k])cache[k]=await api(`/api/results/runs/${RUN}/${kind}`);return cache[k]}
+function showTip(ev,html){tip.innerHTML=html;tip.style.display="block";const x=Math.min(ev.clientX+14,innerWidth-360);tip.style.left=x+"px";tip.style.top=(ev.clientY+14)+"px"}
+function hideTip(){tip.style.display="none"}
+function eng(e){return `<span class="sw ${SW[e]}"></span>${LBL[e]}`}
+
+async function init(){
+  const runs=await api("/api/results/runs");
+  if(!runs.length){main.innerHTML=`<div class="empty">results/raw 에 실행 결과가 없습니다. <code>uv run python -m app.benchmark.runner</code> 로 생성하세요.</div>`;return}
+  const st=state();
+  $("#run").innerHTML=runs.map(r=>`<option value="${r.run_id}">${r.run_id} · ${r.mode}${r.reps?` · ${r.reps}회`:""}${r.spent_usd!=null?` · $${r.spent_usd.toFixed(3)}`:""}</option>`).join("");
+  const live=runs.find(r=>r.mode==="live"&&r.reps>=5)||runs.find(r=>r.mode==="live")||runs[0];
+  RUN=runs.some(r=>r.run_id===st.run)?st.run:live.run_id;$("#run").value=RUN;
+  const TABS=["overview","decisions","conversations","a2a","report","tests"];
+  TAB=TABS.includes(location.hash.slice(1))?location.hash.slice(1):(st.tab||"overview");
+  $("#run").onchange=()=>{RUN=$("#run").value;save({run:RUN});render()};
+  addEventListener("hashchange",()=>{const t=location.hash.slice(1);if(TABS.includes(t)&&t!==TAB){TAB=t;save({tab:TAB});render()}});
+  document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{TAB=b.dataset.t;save({tab:TAB});history.replaceState(null,"","#"+TAB);render()});
+  render();
+}
+async function render(){
+  document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.t===TAB));
+  main.innerHTML=`<div class="empty">불러오는 중…</div>`;
+  try{await ({overview,decisions,conversations,a2a,report,tests})[TAB]()}catch(e){main.innerHTML=`<div class="card bad">오류: ${esc(e.message)}</div>`}
+}
+
+/* ------------------------------------------------------------ overview */
+async function overview(){
+  const s=await get("summary"),m=s.meta,c=s.conversations,d=s.decisions,a=s.a2a;
+  let h=m.mode==="mock"?`<div class="banner">MOCK 실행 — 오프라인 대역 모델 결과입니다. 모델 성능이 아닙니다.</div>`:"";
+  h+=`<p class="muted small">${esc(m.started)} → ${esc(m.finished||"")} · Haiku <code>${esc(m.haiku_model)}</code> (reasoning=${esc(m.haiku_reasoning)}) · Jev <code>${esc(m.jev_model)}</code> 임계값 ${m.jev_threshold} · 반복 ${m.reps} · 동시성 ${m.concurrency} · 비용 ${usd(m.spent_usd||0,4)}</p>`;
+  const kpi=(label,f,better="low")=>{const va=f("haiku_only"),vb=f("jev_haiku");
+    return `<div class="kpi"><div class="label">${label}</div>${E.map(e=>`<div class="row"><span class="small">${eng(e)}</span><span class="v">${e==="haiku_only"?va:vb}</span></div>`).join("")}</div>`};
+  if(c){h+=`<div class="kpis">`+
+    kpi("첫 응답 준비 P50",e=>ms(c[e].first_response_ready_ms.p50))+
+    kpi("첫 응답 준비 P95",e=>ms(c[e].first_response_ready_ms.p95))+
+    kpi("통화당 모델 비용 (1만 통화)",e=>`${usd(c[e].cost_per_call)} <span class="small muted">(${usd(c[e].cost_10k_calls,2)})</span>`)+
+    kpi("통화 성공률",e=>pct(c[e].success_rate))+
+    (d?kpi("판단 정확도",e=>pct(d[e].accuracy)):"")+
+    kpi("Fallback (통화 턴)",e=>e==="jev_haiku"?pct(c[e].fallback_rate_turn):"–")+`</div>`}
+  h+=`<div class="card"><h2>턴별 첫 응답 준비 시간 — 점 하나 = 한 턴 (마우스를 올리면 발화·원인)</h2><div id="strip"></div>
+      <p class="small muted">x축 로그 스케일. 표시: ● 일반 턴, ◆ Haiku fallback 턴, ▲ TMS 도구 턴.</p></div>`;
+  if(c||d){h+=`<div class="card"><h2>A vs B 비교</h2><div class="tbl"><table><thead><tr><th>지표</th><th class="r">${eng("haiku_only")}</th><th class="r">${eng("jev_haiku")}</th><th class="r">B / A</th></tr></thead><tbody>`;
+    const row=(name,f,fmt,ratio=true)=>{const va=f("haiku_only"),vb=f("jev_haiku");
+      return `<tr><td>${name}</td><td class="r">${fmt(va)}</td><td class="r">${fmt(vb)}</td><td class="r muted">${ratio&&va&&vb!=null?(vb/va).toFixed(2)+"×":""}</td></tr>`};
+    if(d){h+=`<tr><td colspan="4" class="small muted"><b>1. 순수 판단</b> (${d.haiku_only.n}건/엔진)</td></tr>`+
+      row("정확도 (intent+행동+슬롯)",e=>d[e].accuracy,pct,false)+row("Intent 정확도",e=>d[e].intent_acc,pct,false)+
+      row("판단 시간 P50",e=>d[e].decision_ms.p50,ms)+row("판단 시간 P95",e=>d[e].decision_ms.p95,ms)+
+      row("TTFT P50",e=>d[e].ttft_ms.p50,ms)+row("판단당 비용",e=>d[e].cost_per_decision,x=>usd(x,7))}
+    if(c){h+=`<tr><td colspan="4" class="small muted"><b>2. 전체 통화</b> (${c.haiku_only.n_calls}통화/엔진)</td></tr>`+
+      row("통화 성공률",e=>c[e].success_rate,pct,false)+row("잘못된 종료",e=>c[e].wrong_termination,x=>x,false)+
+      row("통화당 재질문",e=>c[e].reprompts_per_call,n2,false)+row("Intent 정확도 (턴)",e=>c[e].intent_acc_turn,pct,false)+
+      row("TMS 장애 안내 정확",e=>c[e].tool_failure_handled,pct,false)+
+      row("판단 P50",e=>c[e].decision_ms.p50,ms)+row("첫 응답 준비 P50",e=>c[e].first_response_ready_ms.p50,ms)+
+      row("첫 응답 준비 P95",e=>c[e].first_response_ready_ms.p95,ms)+row("도구 턴 첫 응답 P50",e=>c[e].first_response_ready_ms_tool_turns.p50,ms)+
+      row("턴 전체 P50",e=>c[e].turn_total_ms.p50,ms)+row("시나리오 완료 P50",e=>c[e].scenario_ms.p50,ms)+
+      row("통화당 입력/출력 토큰",e=>c[e].in_tokens_per_call,x=>Math.round(x))+
+      row("턴당 비용",e=>c[e].cost_per_turn,x=>usd(x,7))+row("통화당 비용",e=>c[e].cost_per_call,usd)+
+      row("1,000 통화",e=>c[e].cost_1k_calls,x=>usd(x,3))+row("10,000 통화",e=>c[e].cost_10k_calls,x=>usd(x,2))}
+    if(a){h+=`<tr><td colspan="4" class="small muted"><b>3. A2A (로컬 WebSocket)</b></td></tr>`+
+      row("프로토콜 위반",e=>a[e].violations,x=>x,false)+row("A2A 오버헤드 P50",e=>a[e].overhead_ms.p50,x=>x==null?"–":x.toFixed(1)+" ms",false)+
+      row("클라이언트 관측 턴 P50",e=>a[e].turn_ms.p50,ms)}
+    h+=`</tbody></table></div>`;
+    if(c)h+=`<p class="small muted">Fallback 원인 (B): ${esc(Object.entries(c.jev_haiku.fallback_reasons||{}).map(([k,v])=>k+" "+v).join(", ")||"없음")}. 비용은 모델 API만 (Connect·통신·STT/TTS 제외).</p>`;
+    h+=`</div>`}
+  h+=`<div class="card"><h2>차트</h2><div class="charts" id="charts"></div></div><div class="card md" id="findings" style="display:none"></div>`;
+  main.innerHTML=h;
+  const charts=["latency_turn","latency_distribution","accuracy","cost","success_by_category","a2a"];
+  $("#charts").innerHTML=charts.map(f=>`<img loading="lazy" alt="${f}" src="/api/results/runs/${RUN}/charts/${f}.png" onerror="this.remove()">`).join("");
+  fetch(`/api/results/runs/${RUN}/doc/findings`).then(r=>r.ok?r.text():null).then(t=>{if(t){const el=$("#findings");el.style.display="";el.innerHTML=md(t)}});
+  if(c)strip(await get("conversations"));
+}
+function strip(rows){
+  const W=Math.max(560,$("#strip").clientWidth),H=150,L=110,R=16,T=10,laneH=56;
+  const pts=[];rows.forEach(x=>x.turns.forEach(t=>{if(t.first_response_ready_ms!=null)pts.push({e:x.engine,v:t.first_response_ready_ms,t,x})}));
+  if(!pts.length){$("#strip").innerHTML=`<div class="empty">데이터 없음</div>`;return}
+  const lo=Math.max(50,Math.min(...pts.map(p=>p.v))*0.8),hi=Math.max(...pts.map(p=>p.v))*1.15;
+  const sx=v=>L+(Math.log(v)-Math.log(lo))/(Math.log(hi)-Math.log(lo))*(W-L-R);
+  let svg=`<svg width="100%" viewBox="0 0 ${W} ${H}" role="img" aria-label="per-turn first response ready time">`;
+  [100,200,500,1000,2000,5000,10000].filter(v=>v>=lo&&v<=hi).forEach(v=>{const x=sx(v);
+    svg+=`<line x1="${x}" x2="${x}" y1="${T}" y2="${H-22}" stroke="var(--line)"/><text x="${x}" y="${H-6}" text-anchor="middle">${v>=1000?v/1000+"s":v+"ms"}</text>`});
+  let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  E.forEach((e,i)=>{const cy=T+laneH*i+laneH/2;svg+=`<text x="${L-8}" y="${cy+4}" text-anchor="end">${LBL[e]}</text>`;
+    pts.filter(p=>p.e===e).forEach((p,j)=>{const x=sx(p.v),y=cy+(rnd()-.5)*(laneH-18),col=`var(--${e==="haiku_only"?"a":"b"})`;
+      const id=pts.indexOf(p);
+      if(p.t.fallback)svg+=`<path data-i="${id}" d="M${x} ${y-5}L${x+5} ${y}L${x} ${y+5}L${x-5} ${y}Z" fill="${col}" stroke="var(--card)" stroke-width="1.5"/>`;
+      else if(p.t.tool_ms)svg+=`<path data-i="${id}" d="M${x} ${y-5}L${x+5} ${y+4}L${x-5} ${y+4}Z" fill="${col}" stroke="var(--card)" stroke-width="1.5"/>`;
+      else svg+=`<circle data-i="${id}" cx="${x}" cy="${y}" r="4" fill="${col}" fill-opacity=".75" stroke="var(--card)" stroke-width="1.5"/>`})});
+  svg+=`</svg>`;$("#strip").innerHTML=svg;
+  $("#strip svg").addEventListener("mousemove",ev=>{const i=ev.target.dataset&&ev.target.dataset.i;if(i==null){hideTip();return}
+    const p=pts[+i];showTip(ev,`<b>${LBL[p.e]}</b> · ${esc(p.x.scenario)} rep ${p.x.rep} · 턴 ${p.t.turn}<br>`+
+      `첫 응답 <b>${ms(p.v)}</b> · 판단 ${ms(p.t.decision_ms)}${p.t.tool_ms?` · TMS ${ms(p.t.tool_ms)}`:""}<br>`+
+      `${esc(p.t.action)} / ${esc(p.t.source)}${p.t.fallback?` · fallback: ${esc(p.t.fallback_reason)}`:""}<br>`+
+      `<span class="muted">기사:</span> ${esc(p.t.input)}`)});
+  $("#strip svg").addEventListener("mouseleave",hideTip);
+}
+
+/* ------------------------------------------------------------ decisions */
+async function decisions(){
+  const rows=await get("decisions");
+  if(!rows.length){main.innerHTML=`<div class="empty">이 실행에는 판단 벤치마크가 없습니다.</div>`;return}
+  const by={};rows.forEach(r=>{(by[r.case]=by[r.case]||{case:r.case,category:r.category,text:r.text,haiku_only:[],jev_haiku:[]})[r.engine].push(r)});
+  const cats=[...new Set(rows.map(r=>r.category))].sort();
+  main.innerHTML=`<div class="card"><h2>순수 판단 — 케이스별 (행 클릭: 반복별 상세)</h2>
+   <div class="filters"><select id="fc"><option value="">전체 카테고리</option>${cats.map(c=>`<option>${c}</option>`).join("")}</select>
+   <label class="small"><input type="checkbox" id="fw"> 오답 있는 케이스만</label><input id="fq" placeholder="발화 검색" size="18"></div>
+   <div class="tbl"><table><thead><tr><th>케이스</th><th>카테고리</th><th>발화</th>${E.map(e=>`<th class="r">${eng(e)}<br><span class="small">정답 · P50</span></th>`).join("")}<th>B fallback</th></tr></thead><tbody id="tb"></tbody></table></div></div>
+   <div class="card" id="det" style="display:none"></div>`;
+  const p50=a=>{const s=a.map(x=>x.decision_ms).sort((x,y)=>x-y);return s.length?s[Math.floor((s.length-1)/2)]:null};
+  const draw=()=>{const c=$("#fc").value,w=$("#fw").checked,q=$("#fq").value.trim();
+    $("#tb").innerHTML=Object.values(by).sort((x,y)=>x.case.localeCompare(y.case)).filter(g=>(!c||g.category===c)&&(!q||g.text.includes(q))&&(!w||E.some(e=>g[e].some(x=>!x.correct)))).map(g=>
+      `<tr class="click" data-c="${g.case}"><td>${g.case}</td><td>${g.category}</td><td>${esc(g.text)}</td>${E.map(e=>{const ok=g[e].filter(x=>x.correct).length;
+        return `<td class="r"><span class="${ok===g[e].length?"ok":"bad"}">${ok}/${g[e].length}</span> · ${ms(p50(g[e]))}</td>`}).join("")}
+        <td class="small">${esc([...new Set(g.jev_haiku.filter(x=>x.fallback).map(x=>x.fallback_reason))].join(", "))}</td></tr>`).join("");
+    document.querySelectorAll("#tb tr").forEach(tr=>tr.onclick=()=>detail(by[tr.dataset.c]))};
+  ["fc","fw","fq"].forEach(id=>$("#"+id).oninput=draw);draw();
+  function detail(g){const el=$("#det");el.style.display="";
+    el.innerHTML=`<h2>${g.case} · ${esc(g.text)}</h2><div class="tbl"><table><thead><tr><th>엔진</th><th>반복</th><th>intent</th><th>행동</th><th>슬롯</th><th class="r">판단</th><th class="r">TTFT</th><th>source</th><th class="r">토큰 in/out</th><th class="r">비용</th></tr></thead><tbody>`+
+      E.flatMap(e=>g[e].sort((a,b)=>a.rep-b.rep).map(x=>`<tr><td>${eng(e)}</td><td>${x.rep}</td><td class="${x.intent_ok?"":"bad"}">${esc(x.intent)}</td>
+        <td class="${x.action_ok?"":"bad"}">${esc(x.action)}${x.overridden?` <span class="pill">rule override</span>`:""}</td><td class="small ${x.slot_ok?"":"bad"}">${esc(JSON.stringify(x.slots))}</td>
+        <td class="r">${ms(x.decision_ms)}</td><td class="r">${ms(x.ttft_ms)}</td><td class="small">${esc(x.source)}${x.fallback?`<br>${esc(x.fallback_reason)}`:""}</td>
+        <td class="r">${x.input_tokens}/${x.output_tokens}</td><td class="r">${usd(x.cost_usd,7)}</td></tr>`)).join("")+`</tbody></table></div>`;
+    el.scrollIntoView({behavior:"smooth"})}
+}
+
+/* ------------------------------------------------------------ conversations */
+async function conversations(){
+  const rows=await get("conversations");
+  if(!rows.length){main.innerHTML=`<div class="empty">이 실행에는 통화 벤치마크가 없습니다.</div>`;return}
+  const by={};rows.forEach(r=>{(by[r.scenario]=by[r.scenario]||{id:r.scenario,category:r.category,expected:r.expected_outcome,haiku_only:[],jev_haiku:[]})[r.engine].push(r)});
+  const med=a=>{const s=a.slice().sort((x,y)=>x-y);return s.length?s[Math.floor((s.length-1)/2)]:null};
+  main.innerHTML=`<div class="card"><h2>통화 시나리오 (행 클릭: A/B 대화 나란히 보기)</h2>
+   <div class="filters"><label class="small"><input type="checkbox" id="fw"> 실패 있는 시나리오만</label></div>
+   <div class="tbl"><table><thead><tr><th>시나리오</th><th>카테고리</th><th>기대 결과</th>${E.map(e=>`<th class="r">${eng(e)}<br><span class="small">성공 · 완료 P50 · 턴 · 비용</span></th>`).join("")}</tr></thead><tbody id="tb"></tbody></table></div></div>
+   <div class="card" id="det" style="display:none"></div>`;
+  const draw=()=>{const w=$("#fw").checked;
+    $("#tb").innerHTML=Object.values(by).sort((x,y)=>x.id.localeCompare(y.id)).filter(g=>!w||E.some(e=>g[e].some(x=>!x.success))).map(g=>`<tr class="click" data-s="${g.id}"><td>${g.id}</td><td>${g.category}</td><td>${g.expected}</td>`+
+      E.map(e=>{const a=g[e],ok=a.filter(x=>x.success).length;return `<td class="r"><span class="${ok===a.length?"ok":"bad"}">${ok}/${a.length}</span> · ${ms(med(a.map(x=>x.scenario_ms)))} · ${n2(a.reduce((s,x)=>s+x.n_turns,0)/a.length)} · ${usd(a.reduce((s,x)=>s+x.cost_usd,0)/a.length)}</td>`}).join("")+`</tr>`).join("");
+    document.querySelectorAll("#tb tr").forEach(tr=>tr.onclick=()=>detail(by[tr.dataset.s],0))};
+  $("#fw").oninput=draw;draw();
+  function detail(g,rep){const el=$("#det");el.style.display="";const reps=[...new Set(g.haiku_only.concat(g.jev_haiku).map(x=>x.rep))].sort();
+    const pane=e=>{const x=g[e].find(x=>x.rep===rep);if(!x)return `<div class="muted">없음</div>`;
+      return `<div class="small">${x.success?'<span class="ok">✔ 성공</span>':'<span class="bad">✘ 실패</span>'} · 결과 ${esc(x.outcome)} (기대 ${esc(x.expected_outcome)}) · 슬롯 <code>${esc(JSON.stringify(x.slots))}</code>
+        · 완료 ${ms(x.scenario_ms)} · ${usd(x.cost_usd)}${x.tool_failure_handled!=null?` · TMS 장애 안내 ${x.tool_failure_handled?"✔":"✘"}`:""}</div>`+
+        x.turns.map(t=>`<div class="turn"><div class="d">기사: ${esc(t.input)} <span class="pill">기대 ${esc(t.expected_intent)}</span><span class="pill ${t.intent===t.expected_intent?"":"bad"}">판정 ${esc(t.intent)}</span></div>
+          <div class="agent">상담원: ${esc(t.reply)}</div><div class="small muted num"><span class="pill">${esc(t.action)}</span><span class="pill">${esc(t.source)}</span>${t.fallback?`<span class="pill">fallback: ${esc(t.fallback_reason)}</span>`:""}${t.overridden?`<span class="pill">rule override</span>`:""}
+          판단 ${ms(t.decision_ms)} · 첫 응답 ${ms(t.first_response_ready_ms)} · 턴 ${ms(t.turn_total_ms)}${t.tool_ms?` · TMS ${ms(t.tool_ms)}${t.tool_ok===false?' <span class="bad">실패</span>':""}`:""} · tok ${t.input_tokens}/${t.output_tokens} · ${usd(t.cost_usd,7)}</div></div>`).join("")};
+    el.innerHTML=`<h2>${g.id} · ${g.category} — 반복 <select id="rep">${reps.map(r=>`<option ${r===rep?"selected":""}>${r}</option>`).join("")}</select></h2>
+      <div class="cols">${E.map(e=>`<div><h2>${eng(e)}</h2>${pane(e)}</div>`).join("")}</div>`;
+    $("#rep").onchange=()=>detail(g,+$("#rep").value);el.scrollIntoView({behavior:"smooth"})}
+}
+
+/* ------------------------------------------------------------ a2a */
+async function a2a(){
+  const rows=await get("a2a"),s=(await get("summary")).a2a;
+  if(!rows.length){main.innerHTML=`<div class="empty">이 실행에는 A2A 벤치마크가 없습니다.</div>`;return}
+  let h=`<div class="card"><h2>A2A 어댑터 (로컬 WebSocket, Mock Connect)</h2><table><thead><tr><th>지표</th>${E.map(e=>`<th class="r">${eng(e)}</th>`).join("")}</tr></thead><tbody>`;
+  const r=(n,f)=>`<tr><td>${n}</td>${E.map(e=>`<td class="r">${f(s[e])}</td>`).join("")}</tr>`;
+  h+=r("통화 / 턴",x=>`${x.n_calls} / ${x.n_turns}`)+r("프로토콜 위반",x=>x.violations)+r("TRACING_SPAN 포함 턴",x=>pct(x.traced_share))+r("FINISH 타입 정확",x=>pct(x.outcome_acc))+
+    r("INIT_SESSION 응답 P50",x=>x.init_ms.p50==null?"–":x.init_ms.p50.toFixed(2)+" ms")+r("클라이언트 첫 청크 P50",x=>ms(x.first_chunk_ms.p50))+
+    r("클라이언트 턴 P50 / P95",x=>`${ms(x.turn_ms.p50)} / ${ms(x.turn_ms.p95)}`)+r("서버 내부 턴 P50",x=>ms(x.server_ms.p50))+
+    r("A2A 오버헤드 P50 / P95",x=>x.overhead_ms.p50==null?"–":`${x.overhead_ms.p50.toFixed(1)} / ${x.overhead_ms.p95.toFixed(1)} ms`)+r("직접 호출 턴 P50 (같은 시나리오)",x=>ms(x.direct_turn_total_ms.p50));
+  h+=`</tbody></table><p class="small muted">오버헤드 = 클라이언트가 본 턴 시간 − 서버 invoke_agent 스팬 길이. 실제 Connect의 WAN·내부 처리 지연은 Phase 2에서 측정.</p></div>`;
+  h+=`<div class="card"><h2>통화별</h2><div class="tbl"><table><thead><tr><th>시나리오</th><th>엔진</th><th>반복</th><th>FINISH</th><th class="r">INIT</th><th class="r">인사</th><th>턴 (클라이언트 / 서버 / 오버헤드)</th><th>위반</th></tr></thead><tbody>`+
+    rows.sort((a,b)=>a.scenario.localeCompare(b.scenario)||a.engine.localeCompare(b.engine)||a.rep-b.rep).map(x=>`<tr><td>${x.scenario}</td><td>${eng(x.engine)}</td><td>${x.rep}</td>
+      <td class="${x.outcome_ok?"ok":"bad"}">${esc(x.finish?x.finish.type:"–")}</td><td class="r">${x.init_ms.toFixed(2)} ms</td><td class="r">${ms(x.greeting_ms)}</td>
+      <td class="small num">${x.turns.map(t=>`<div title="${esc(t.input)}">${esc(t.action)}: ${ms(t.turn_ms)} / ${ms(t.server_ms)} / ${t.overhead_ms==null?"–":t.overhead_ms.toFixed(1)+" ms"}</div>`).join("")}</td>
+      <td class="${x.violations.length?"bad":"ok"}">${x.violations.length?esc(x.violations.join("; ")):"0"}</td></tr>`).join("")+`</tbody></table></div></div>`;
+  main.innerHTML=h;
+}
+
+/* ------------------------------------------------------------ report */
+function md(t){const fix=t.replace(/\]\(charts\//g,`](/api/results/runs/${RUN}/charts/`);
+  return window.marked?marked.parse(fix,{mangle:false,headerIds:false}).replace(/<script/gi,"&lt;script"):`<pre>${esc(t)}</pre>`}
+async function report(){
+  const [rep,fin]=await Promise.all(["report","findings"].map(n=>fetch(`/api/results/runs/${RUN}/doc/${n}`).then(r=>r.ok?r.text():null)));
+  main.innerHTML=(fin?`<div class="card md">${md(fin)}</div>`:"")+(rep?`<div class="card md">${md(rep)}</div>`:`<div class="empty">report.md 없음</div>`)+
+    `<div class="card"><button id="rb">원시 데이터로 리포트·차트 다시 생성</button> <span class="small muted" id="rbm"></span></div>`;
+  $("#rb").onclick=async()=>{$("#rb").disabled=true;$("#rbm").textContent="생성 중…";
+    const r=await fetch(`/api/results/runs/${RUN}/rebuild`,{method:"POST"});cache={};$("#rbm").textContent=r.ok?"완료":"실패";$("#rb").disabled=false;if(r.ok)report()};
+}
+
+/* ------------------------------------------------------------ tests */
+async function tests(sel){
+  const list=await api("/api/results/tests");
+  main.innerHTML=`<div class="card"><h2>테스트 (pytest, LLM_MODE=mock — API 비용 없음)</h2>
+    <button class="primary" id="run-tests">테스트 실행</button> <span class="small muted" id="tm"></span>
+    <div class="tbl" style="margin-top:10px"><table><thead><tr><th>실행</th><th class="r">전체</th><th class="r">통과</th><th class="r">실패</th><th class="r">오류</th><th class="r">시간</th></tr></thead><tbody>${
+      list.map(t=>`<tr class="click" data-id="${t.id}"><td>${t.id}</td><td class="r">${t.total}</td><td class="r ok">${t.passed}</td><td class="r ${t.failed?"bad":""}">${t.failed}</td><td class="r ${t.error?"bad":""}">${t.error}</td><td class="r">${t.duration_s.toFixed(2)} s</td></tr>`).join("")||`<tr><td colspan="6" class="muted">아직 실행 기록이 없습니다.</td></tr>`}</tbody></table></div></div>
+    <div id="tdet"></div>`;
+  document.querySelectorAll("tr[data-id]").forEach(tr=>tr.onclick=()=>showTest(tr.dataset.id));
+  $("#run-tests").onclick=async()=>{$("#run-tests").disabled=true;$("#tm").textContent="실행 중… (수 초)";
+    const r=await fetch("/api/results/tests/run",{method:"POST"});
+    if(!r.ok){$("#tm").textContent="실패: "+(await r.text());$("#run-tests").disabled=false;return}
+    const t=await r.json();await tests(t.id)};
+  const target=sel||(list[0]&&list[0].id);if(target)showTest(target);
+}
+async function showTest(id){
+  const t=await api(`/api/results/tests/${id}`);const files={};t.cases.forEach(c=>(files[c.file]=files[c.file]||[]).push(c));
+  $("#tdet").innerHTML=`<div class="card"><h2>${t.id} — ${t.failed+t.error?`<span class="bad">${t.failed+t.error}개 실패</span>`:`<span class="ok">전체 통과</span>`} · ${t.passed}/${t.total} · ${t.duration_s.toFixed(2)} s</h2>`+
+    Object.entries(files).map(([f,cs])=>`<h2 class="small" style="margin-top:12px">${esc(f)} <span class="muted">(${cs.filter(c=>c.status==="passed").length}/${cs.length})</span></h2>
+      <table><tbody>${cs.map(c=>`<tr><td style="width:24px" class="${c.status==="passed"?"ok":c.status==="skipped"?"muted":"bad"}">${c.status==="passed"?"✔":c.status==="skipped"?"–":"✘"}</td><td>${esc(c.name)}${c.message?`<pre>${esc(c.message)}</pre>`:""}</td><td class="r small muted">${(c.time_s*1000).toFixed(0)} ms</td></tr>`).join("")}</tbody></table>`).join("")+
+    `<details style="margin-top:10px"><summary class="small">pytest 출력</summary><pre>${esc(t.log||"")}</pre></details></div>`;
+}
+init();
+</script>
+</body>
+</html>

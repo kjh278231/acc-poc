@@ -4,3 +4,4 @@ __pycache__/
 results/raw/
 *.pyc
 .pytest_cache/
+results/tests/

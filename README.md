@@ -42,6 +42,24 @@ uv run python -m app.benchmark.runner --mock --reps 1   # 파이프라인 점검
 
 결과: `results/<run_id>/report.md`, `summary.json`, `charts/*.png` (원시 JSONL은 `results/raw/<run_id>/`).
 
+### 결과 대시보드
+
+```bash
+uv run uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8080
+# http://127.0.0.1:8080/results   (A/B 대화 UI는 http://127.0.0.1:8080/)
+```
+
+| 탭 | 내용 |
+|---|---|
+| 개요 | 실행 선택, A/B 핵심 지표, 턴별 첫 응답 시간 분포(점에 마우스 → 발화·원인·fallback), 비교표(B/A 배율), 차트, findings |
+| 판단 | 30개 케이스별 정답 수·P50, 카테고리/오답/발화 필터, 행 클릭 → 반복별 intent·행동·슬롯·지연·토큰·비용 |
+| 통화 | 20개 시나리오별 성공·완료시간·턴·비용, 행 클릭 → 같은 반복의 A/B 대화를 나란히, 턴별 지표 |
+| A2A | 로컬 A2A 지표, 통화별 INIT·턴(클라이언트/서버/오버헤드)·위반 |
+| 리포트 | findings.md + report.md 렌더링, 원시 데이터로 리포트·차트 재생성 |
+| 테스트 | 버튼으로 pytest 실행(LLM_MODE=mock, 비용 없음), 실행 이력, 파일별 통과/실패·메시지·출력 |
+
+`OPENROUTER_API_KEY`가 없으면 에이전트 경로는 꺼지고 대시보드만 뜬다. 로컬 도구이므로 `127.0.0.1`에만 바인딩할 것 (테스트 실행 엔드포인트가 있음).
+
 ## 구조
 
 ```text
