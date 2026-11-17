@@ -60,6 +60,17 @@ def resolve(state: CallState, d: Decision, text: str) -> Resolution:
         elif delay is not None and eta is None and delay != parsed.minutes:
             reasons.append(f"parser_override_delay:{delay}->{parsed.minutes}")
             delay = parsed.minutes
+        elif eta is None and delay is None and d.intent not in ("off_topic", "request_human", "end_call"):
+            # the model gave no number but the common parser did ("20분에서 30분 사이요"): fill the slot being asked
+            target = pending_before
+            if target == "issue" and d.issue not in (None, IssueType.NONE):
+                target = "delay"
+            if target == "eta":
+                eta = parsed.minutes
+                reasons.append(f"parser_fill_eta:{eta}")
+            elif target == "delay":
+                delay = parsed.minutes
+                reasons.append(f"parser_fill_delay:{delay}")
 
     if eta is not None and s.eta_minutes != eta:
         s.eta_minutes = eta
@@ -77,13 +88,23 @@ def resolve(state: CallState, d: Decision, text: str) -> Resolution:
     proposed = d.action
     res = Resolution(action=proposed, filled=filled, reasons=reasons)
 
-    # ---- 2. terminal requests from the driver ----
+    # ---- 2. terminal requests: only when the driver asked for them; otherwise the rules below decide ----
     if proposed == Action.ESCALATE:
-        return _finish(res, state, Action.ESCALATE, d.raw.get("escalate_reason") or "driver_request")
+        if d.intent == "request_human":
+            return _finish(res, state, Action.ESCALATE, "driver_request")
+        if d.raw.get("escalate_reason") != "severe_issue":  # severe issues are escalated by step 3/4
+            reasons.append("escalate_not_requested")
+            res.overridden = True
+            proposed = ASK_FOR[pending] if pending else Action.COMPLETE
     if proposed == Action.END_CALL:
-        if pending is None:
+        if d.intent != "end_call":
+            reasons.append("end_call_not_requested")
+            res.overridden = True
+            proposed = ASK_FOR[pending] if pending else Action.COMPLETE
+        elif pending is None:
             return _finish(res, state, Action.COMPLETE, "all_slots_collected", overridden=True)
-        return _finish(res, state, Action.END_CALL, f"driver_ended_missing_{pending}")
+        else:
+            return _finish(res, state, Action.END_CALL, f"driver_ended_missing_{pending}")
 
     # ---- 3. severe issue: record what we have and hand to a human ----
     if s.issue in SEVERE_ISSUES and (pending is None or state.reprompts.get("delay", 0) >= 1 or proposed == Action.CLARIFY and pending == "delay"):
@@ -108,7 +129,7 @@ def resolve(state: CallState, d: Decision, text: str) -> Resolution:
         return res
 
     progressed = bool(filled)
-    if proposed == Action.CLARIFY or (not progressed and pending == pending_before and proposed in ASK_FOR.values()
+    if (proposed == Action.CLARIFY and not progressed) or (not progressed and pending == pending_before and proposed in ASK_FOR.values()
                                       and state.last_action in (ASK_FOR[pending], Action.CLARIFY, Action.GREET_ASK_ETA)):
         n = state.reprompts.get(pending, 0) + 1
         state.reprompts[pending] = n

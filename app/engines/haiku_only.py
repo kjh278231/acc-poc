@@ -27,7 +27,7 @@ SYSTEM = """당신은 물류 운송관리센터의 AI 상담원입니다. 운송
 - intent: provide_info(물은 정보를 답함) | no_issue(특이사항 없다고 답함) | ambiguous(답하려 하나 시간·내용이 불명확) | request_human(사람 담당자 연결 요청) | end_call(통화를 끝내려 함) | off_topic(업무와 무관한 말·질문)
 - eta_minutes / delay_minutes: 이번 발화에서 새로 말한 시간을 지금부터의 분으로 환산 (예: 한 시간 반 -> 90). 범위는 큰 값. 말하지 않았거나 불명확하면 null. 추측 금지.
 - issue: 이번 발화에서 확인된 특이사항 유형, 언급 없으면 null. 특이사항 없다고 하면 "none".
-- action: 다음 행동. ASK_ETA | ASK_ISSUE | ASK_DELAY | CLARIFY(불명확해서 같은 항목 재질문) | ANSWER_OTHER(무관한 질문에 짧게 답하고 원래 질문으로 복귀) | COMPLETE(필요 정보 모두 확보) | ESCALATE(담당자 연결 요청, 사고·고장 등 사람 판단 필요) | END_CALL(기사가 통화 종료 원함)
+- action: 다음 행동. ASK_ETA | ASK_ISSUE | ASK_DELAY | CLARIFY(불명확해서 같은 항목 재질문) | ANSWER_OTHER(무관한 질문에 짧게 답하고 원래 질문으로 복귀) | COMPLETE(필요 정보 모두 확보) | ESCALATE(기사가 사람 담당자 연결을 요청) | END_CALL(기사가 통화 종료 원함). 사고·고장도 먼저 ASK_DELAY로 지연시간을 묻는다 (담당자 연결은 시스템이 처리)
 - reply: 기사에게 할 다음 말. 전화 음성으로 읽힐 존댓말 1~2문장, 60자 내외. 확인한 값을 짧게 복창하고 다음 질문을 한다. 시스템에 등록했다고 미리 말하지 않는다.
 """
 

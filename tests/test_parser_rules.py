@@ -79,7 +79,7 @@ def test_reprompt_limit_escalates():
 
 def test_end_call_partial():
     st = _st(eta_minutes=30)
-    r = resolve(st, Decision(action=Action.END_CALL), "바빠서 끊을게요")
+    r = resolve(st, Decision(action=Action.END_CALL, intent="end_call"), "바빠서 끊을게요")
     assert r.action == Action.END_CALL and r.finish == "END_CALL" and r.needs_tms
 
 
@@ -87,3 +87,25 @@ def test_out_of_range_rejected():
     st = _st()
     resolve(st, Decision(action=Action.ASK_ISSUE, eta_minutes=99999), "아주 오래요")
     assert st.slots.eta_minutes is None
+
+
+def test_parser_fills_range_when_model_gave_no_number():
+    st = _st()
+    r = resolve(st, Decision(action=Action.CLARIFY, intent="ambiguous"), "20분에서 30분 사이요")
+    assert st.slots.eta_minutes == 30 and r.action == Action.ASK_ISSUE and "parser_fill_eta:30" in r.reasons
+
+
+def test_escalate_only_when_driver_asks():
+    st = _st(eta_minutes=40)
+    st.last_action = Action.ASK_ISSUE
+    r = resolve(st, Decision(action=Action.ESCALATE, intent="provide_info", issue=IssueType.ACCIDENT), "사고가 났어요")
+    assert r.action == Action.ASK_DELAY and r.finish is None and "escalate_not_requested" in r.reasons
+    st2 = _st()
+    r = resolve(st2, Decision(action=Action.ESCALATE, intent="request_human"), "담당자 바꿔줘요")
+    assert r.finish == "ESCALATE" and r.finish_reason == "driver_request"
+
+
+def test_end_call_only_when_driver_asks():
+    st = _st()
+    r = resolve(st, Decision(action=Action.END_CALL, intent="provide_info", eta_minutes=30), "30분이요")
+    assert r.action == Action.ASK_ISSUE and r.finish is None
