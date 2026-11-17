@@ -39,6 +39,15 @@ from app.services.tms_mock import TmsMock
 ENGINES = ["haiku_only", "jev_haiku"]
 
 
+FAILURE_WORDS = ("지연", "완료되지 않", "되지 않았", "문제", "오류", "원활하지", "실패", "다시 확인")
+SUCCESS_CLAIMS = ("등록했습니다", "등록되었습니다", "등록 완료했", "반영했습니다", "반영되었습니다")
+
+
+def tool_failure_reported(reply: str) -> bool:
+    """After a TMS failure the agent must say it did not go through and must not claim it did."""
+    return any(w in reply for w in FAILURE_WORDS) and not any(w in reply for w in SUCCESS_CLAIMS)
+
+
 class BudgetExceeded(Exception):
     pass
 
@@ -120,8 +129,7 @@ async def run_conversation(engines: dict, sc: Scenario, engine: str, rep: int, t
     else:  # nothing collected -> nothing to record
         tms_ok = rec is None
     if sc.tms_fail:  # failure must be reported, never claimed as success
-        last = replies[-1] if replies else ""
-        tool_failure_handled = "지연" in last and "등록했습니다" not in last
+        tool_failure_handled = tool_failure_reported(replies[-1] if replies else "")
         tms_ok = True
     else:
         tool_failure_handled = None

@@ -181,7 +181,7 @@ class TurnValidator:
                 elif et == "TEXT_RESPONSE_CHUNK":
                     tr.artifacts += 1
                     tr.chunks += len(a["parts"])
-                    tr.text += "".join(p.get("text", "") for p in a["parts"]) + " "
+                    tr.text += " ".join(p.get("text", "") for p in a["parts"]) + " "
             msg = task["status"].get("message") or {}
             for p in msg.get("parts") or []:
                 if "finish" in (p.get("data") or {}):

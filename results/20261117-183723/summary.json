@@ -1,0 +1,503 @@
+{
+  "meta": {
+    "run_id": "20261117-183723",
+    "mode": "live",
+    "reps": 5,
+    "seed": 20261117,
+    "concurrency": 4,
+    "haiku_model": "anthropic/claude-haiku-5.5",
+    "haiku_reasoning": "none",
+    "jev_model": "typesafe/jev-1.14",
+    "jev_threshold": 0.8,
+    "tms_latency_ms": 150,
+    "started": "2026-11-17 18:37:23 +0900",
+    "parts": [
+      "decisions",
+      "conversations",
+      "a2a"
+    ],
+    "finished": "2026-11-17 18:44:02 +0900",
+    "spent_usd": 0.12861617600000008
+  },
+  "decisions": {
+    "haiku_only": {
+      "n": 150,
+      "errors": 0,
+      "accuracy": 0.9666666666666667,
+      "intent_acc": 0.9666666666666667,
+      "action_acc": 1.0,
+      "slot_acc": 1.0,
+      "decision_ms": {
+        "n": 150,
+        "p50": 1577.0667659817263,
+        "p95": 2357.6375000411645,
+        "mean": 1646.4315925806295
+      },
+      "decision_ms_no_fallback": {
+        "n": 150,
+        "p50": 1577.0667659817263,
+        "p95": 2357.6375000411645,
+        "mean": 1646.4315925806295
+      },
+      "decision_ms_fallback": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "mean": null
+      },
+      "accuracy_no_fallback": 0.9666666666666667,
+      "accuracy_fallback": null,
+      "ttft_ms": {
+        "n": 150,
+        "p50": 1112.3022194951773,
+        "p95": 1888.1614359270318,
+        "mean": 1189.4273896379552
+      },
+      "fallback_rate": null,
+      "fallback_reasons": {},
+      "in_tokens_mean": 1730.5333333333333,
+      "out_tokens_mean": 120.62666666666667,
+      "cost_per_decision": 0.00023336666666666668,
+      "cost_actual_share": 1.0,
+      "calls_by_model": {
+        "anthropic/claude-haiku-5.5": 150
+      },
+      "by_category": {
+        "accident": 1.0,
+        "ambiguous": 1.0,
+        "breakdown": 1.0,
+        "complex": 1.0,
+        "end_call": 1.0,
+        "eta_unclear": 1.0,
+        "human": 1.0,
+        "normal": 0.8888888888888888,
+        "off_topic": 1.0,
+        "traffic": 1.0,
+        "weather": 1.0
+      },
+      "failures": [
+        [
+          "d04",
+          "20분에서 30분 사이요",
+          "ambiguous",
+          "ASK_ISSUE",
+          "{\"eta_minutes\": 30, \"issue\": null, \"delay_minutes\": null}"
+        ]
+      ]
+    },
+    "jev_haiku": {
+      "n": 150,
+      "errors": 0,
+      "accuracy": 1.0,
+      "intent_acc": 1.0,
+      "action_acc": 1.0,
+      "slot_acc": 1.0,
+      "decision_ms": {
+        "n": 150,
+        "p50": 447.60734599549323,
+        "p95": 2341.4216238074014,
+        "mean": 720.0316190517818
+      },
+      "decision_ms_no_fallback": {
+        "n": 125,
+        "p50": 428.05931996554136,
+        "p95": 536.0224365605973,
+        "mean": 437.9093394461088
+      },
+      "decision_ms_fallback": {
+        "n": 25,
+        "p50": 1993.8696040189825,
+        "p95": 2940.0638065999374,
+        "mean": 2130.643017080147
+      },
+      "accuracy_no_fallback": 1.0,
+      "accuracy_fallback": 1.0,
+      "ttft_ms": {
+        "n": 150,
+        "p50": 447.5182919995859,
+        "p95": 1803.1895963678844,
+        "mean": 634.7397853954075
+      },
+      "fallback_rate": 0.16666666666666666,
+      "fallback_reasons": {
+        "multiple_time_expressions": 5,
+        "off_topic": 10,
+        "low_confidence_intent": 10
+      },
+      "in_tokens_mean": 1262.3,
+      "out_tokens_mean": 162.41333333333333,
+      "cost_per_decision": 8.081086666666666e-05,
+      "cost_actual_share": 1.0,
+      "calls_by_model": {
+        "typesafe/jev-1.14-20261014": 150,
+        "anthropic/claude-haiku-5.5": 25
+      },
+      "by_category": {
+        "accident": 1.0,
+        "ambiguous": 1.0,
+        "breakdown": 1.0,
+        "complex": 1.0,
+        "end_call": 1.0,
+        "eta_unclear": 1.0,
+        "human": 1.0,
+        "normal": 1.0,
+        "off_topic": 1.0,
+        "traffic": 1.0,
+        "weather": 1.0
+      },
+      "failures": []
+    }
+  },
+  "conversations": {
+    "haiku_only": {
+      "n_calls": 100,
+      "n_turns": 235,
+      "success_rate": 1.0,
+      "outcome_acc": 1.0,
+      "slots_acc": 1.0,
+      "wrong_termination": 0,
+      "stuck": 0,
+      "reprompts_per_call": 0.3,
+      "turns_per_call": 2.35,
+      "intent_acc_turn": 0.9787234042553191,
+      "tool_failure_handled": 1.0,
+      "scenario_ms": {
+        "n": 100,
+        "p50": 5607.909507496515,
+        "p95": 8065.095007387572,
+        "mean": 5551.935368367704
+      },
+      "first_response_ready_ms": {
+        "n": 235,
+        "p50": 1944.8637760360725,
+        "p95": 3808.6619549780157,
+        "mean": 2362.4234966356603
+      },
+      "first_response_ready_ms_tool_turns": {
+        "n": 95,
+        "p50": 3320.9622349822894,
+        "p95": 4163.092805293854,
+        "mean": 3368.356128185252
+      },
+      "turn_total_ms": {
+        "n": 235,
+        "p50": 1944.883772986941,
+        "p95": 3808.6932798963976,
+        "mean": 2362.4485123947143
+      },
+      "decision_ms": {
+        "n": 235,
+        "p50": 1644.8757509933785,
+        "p95": 2334.9423914449294,
+        "mean": 1689.4750302543546
+      },
+      "ttft_ms": {
+        "n": 235,
+        "p50": 1190.4865140095353,
+        "p95": 1844.7474500804676,
+        "mean": 1227.6778664098101
+      },
+      "tool_ms": {
+        "n": 95,
+        "p50": 150.83172800950706,
+        "p95": 301.12798237241805,
+        "mean": 174.51767946568955
+      },
+      "fallback_rate_turn": null,
+      "fallback_reasons": {},
+      "model_errors": 0,
+      "calls_by_model": {
+        "anthropic/claude-haiku-5.5": 330
+      },
+      "calls_per_call": {
+        "anthropic/claude-haiku-5.5": 3.3
+      },
+      "in_tokens_per_call": 4880.65,
+      "out_tokens_per_call": 363.86,
+      "cost_per_turn": 0.00028510425531914896,
+      "cost_per_call": 0.000669995,
+      "cost_per_completed_call": 0.000669995,
+      "cost_1k_calls": 0.669995,
+      "cost_10k_calls": 6.69995,
+      "cost_actual_share": 1.0,
+      "by_category": {
+        "accident": 1.0,
+        "ambiguous": 1.0,
+        "breakdown": 1.0,
+        "complex": 1.0,
+        "end_call": 1.0,
+        "eta_unclear": 1.0,
+        "human": 1.0,
+        "normal": 1.0,
+        "off_topic": 1.0,
+        "tool_failure": 1.0,
+        "traffic": 1.0,
+        "weather": 1.0
+      },
+      "by_scenario": {
+        "c01": 1.0,
+        "c02": 1.0,
+        "c03": 1.0,
+        "c04": 1.0,
+        "c05": 1.0,
+        "c06": 1.0,
+        "c07": 1.0,
+        "c08": 1.0,
+        "c09": 1.0,
+        "c10": 1.0,
+        "c11": 1.0,
+        "c12": 1.0,
+        "c13": 1.0,
+        "c14": 1.0,
+        "c15": 1.0,
+        "c16": 1.0,
+        "c17": 1.0,
+        "c18": 1.0,
+        "c19": 1.0,
+        "c20": 1.0
+      },
+      "failed_examples": []
+    },
+    "jev_haiku": {
+      "n_calls": 100,
+      "n_turns": 235,
+      "success_rate": 1.0,
+      "outcome_acc": 1.0,
+      "slots_acc": 1.0,
+      "wrong_termination": 0,
+      "stuck": 0,
+      "reprompts_per_call": 0.3,
+      "turns_per_call": 2.35,
+      "intent_acc_turn": 1.0,
+      "tool_failure_handled": 1.0,
+      "scenario_ms": {
+        "n": 100,
+        "p50": 1316.3638715050183,
+        "p95": 3311.6597226733575,
+        "mean": 1510.2628043608274
+      },
+      "first_response_ready_ms": {
+        "n": 235,
+        "p50": 415.1635999442078,
+        "p95": 2071.3348830933683,
+        "mean": 571.9885827604423
+      },
+      "first_response_ready_ms_tool_turns": {
+        "n": 95,
+        "p50": 401.1762670124881,
+        "p95": 1047.3312002664863,
+        "mean": 509.11551053378435
+      },
+      "turn_total_ms": {
+        "n": 235,
+        "p50": 506.1768959858455,
+        "p95": 2172.5612366746655,
+        "mean": 642.5823165051778
+      },
+      "decision_ms": {
+        "n": 235,
+        "p50": 415.087497967761,
+        "p95": 2071.2423653167207,
+        "mean": 571.9370868153612
+      },
+      "ttft_ms": {
+        "n": 235,
+        "p50": 414.99801602913067,
+        "p95": 1556.677020702047,
+        "mean": 523.3554718919356
+      },
+      "tool_ms": {
+        "n": 95,
+        "p50": 150.69732494885102,
+        "p95": 301.51452750433236,
+        "mean": 174.5053152094203
+      },
+      "fallback_rate_turn": 0.0851063829787234,
+      "fallback_reasons": {
+        "off_topic": 10,
+        "multiple_time_expressions": 5,
+        "low_confidence_intent": 5
+      },
+      "model_errors": 0,
+      "calls_by_model": {
+        "typesafe/jev-1.14-20261014": 235,
+        "anthropic/claude-haiku-5.5": 20
+      },
+      "calls_per_call": {
+        "typesafe/jev-1.14-20261014": 2.35,
+        "anthropic/claude-haiku-5.5": 0.2
+      },
+      "in_tokens_per_call": 2638.11,
+      "out_tokens_per_call": 356.68,
+      "cost_per_turn": 6.165977021276595e-05,
+      "cost_per_call": 0.00014490046,
+      "cost_per_completed_call": 0.00014490046,
+      "cost_1k_calls": 0.14490046,
+      "cost_10k_calls": 1.4490046,
+      "cost_actual_share": 1.0,
+      "by_category": {
+        "accident": 1.0,
+        "ambiguous": 1.0,
+        "breakdown": 1.0,
+        "complex": 1.0,
+        "end_call": 1.0,
+        "eta_unclear": 1.0,
+        "human": 1.0,
+        "normal": 1.0,
+        "off_topic": 1.0,
+        "tool_failure": 1.0,
+        "traffic": 1.0,
+        "weather": 1.0
+      },
+      "by_scenario": {
+        "c01": 1.0,
+        "c02": 1.0,
+        "c03": 1.0,
+        "c04": 1.0,
+        "c05": 1.0,
+        "c06": 1.0,
+        "c07": 1.0,
+        "c08": 1.0,
+        "c09": 1.0,
+        "c10": 1.0,
+        "c11": 1.0,
+        "c12": 1.0,
+        "c13": 1.0,
+        "c14": 1.0,
+        "c15": 1.0,
+        "c16": 1.0,
+        "c17": 1.0,
+        "c18": 1.0,
+        "c19": 1.0,
+        "c20": 1.0
+      },
+      "failed_examples": []
+    }
+  },
+  "a2a": {
+    "haiku_only": {
+      "n_calls": 18,
+      "n_turns": 45,
+      "violations": 0,
+      "violation_examples": [],
+      "outcome_acc": 1.0,
+      "traced_share": 1.0,
+      "connect_ms": {
+        "n": 18,
+        "p50": 0.9971779945772141,
+        "p95": 1.1047779407817868,
+        "mean": 1.0062997753266245
+      },
+      "init_ms": {
+        "n": 18,
+        "p50": 0.3609764971770346,
+        "p95": 0.40142998041119426,
+        "mean": 0.36001311188253265
+      },
+      "greeting_ms": {
+        "n": 18,
+        "p50": 0.9312114852946252,
+        "p95": 1.14430857647676,
+        "mean": 0.9541483401941756
+      },
+      "first_chunk_ms": {
+        "n": 45,
+        "p50": 1898.1770359678194,
+        "p95": 3880.0283547840077,
+        "mean": 2308.228858221426
+      },
+      "turn_ms": {
+        "n": 45,
+        "p50": 1899.0884199738503,
+        "p95": 3881.11658320995,
+        "mean": 2309.06206204737
+      },
+      "server_ms": {
+        "n": 45,
+        "p50": 1897.755266,
+        "p95": 3880.0377427999993,
+        "mean": 2307.9502130888886
+      },
+      "overhead_ms": {
+        "n": 45,
+        "p50": 1.08585496987439,
+        "p95": 1.3409003671608388,
+        "mean": 1.111848958481308
+      },
+      "direct_first_response_ready_ms": {
+        "n": 75,
+        "p50": 1904.7203889931552,
+        "p95": 3886.1245272040833,
+        "mean": 2398.7104555553137
+      },
+      "direct_turn_total_ms": {
+        "n": 75,
+        "p50": 1904.738545010332,
+        "p95": 3886.154191411333,
+        "mean": 2398.7371067074127
+      }
+    },
+    "jev_haiku": {
+      "n_calls": 18,
+      "n_turns": 45,
+      "violations": 0,
+      "violation_examples": [],
+      "outcome_acc": 1.0,
+      "traced_share": 1.0,
+      "connect_ms": {
+        "n": 18,
+        "p50": 0.9944660123437643,
+        "p95": 2.3880047257989525,
+        "mean": 1.475855889212754
+      },
+      "init_ms": {
+        "n": 18,
+        "p50": 0.3601339994929731,
+        "p95": 0.4675235832110044,
+        "mean": 0.3721301101096388
+      },
+      "greeting_ms": {
+        "n": 18,
+        "p50": 0.9673270105849952,
+        "p95": 1.1291742644971237,
+        "mean": 0.9666878354942633
+      },
+      "first_chunk_ms": {
+        "n": 45,
+        "p50": 409.6985450014472,
+        "p95": 1544.9474034365237,
+        "mean": 512.6079175504856
+      },
+      "turn_ms": {
+        "n": 45,
+        "p50": 522.8129819734022,
+        "p95": 1545.5921382061176,
+        "mean": 583.3676047959468
+      },
+      "server_ms": {
+        "n": 45,
+        "p50": 522.013784,
+        "p95": 1544.8364581999972,
+        "mean": 582.4428284222222
+      },
+      "overhead_ms": {
+        "n": 45,
+        "p50": 0.9222820329017622,
+        "p95": 1.107895566632294,
+        "mean": 0.9247763737246196
+      },
+      "direct_first_response_ready_ms": {
+        "n": 75,
+        "p50": 413.2097879773937,
+        "p95": 1963.701863010646,
+        "mean": 538.7789585045539
+      },
+      "direct_turn_total_ms": {
+        "n": 75,
+        "p50": 506.1768959858455,
+        "p95": 1963.720025896327,
+        "mean": 609.1505156379814
+      }
+    }
+  }
+}

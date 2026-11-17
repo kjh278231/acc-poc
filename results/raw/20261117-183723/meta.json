@@ -1,0 +1,20 @@
+{
+  "run_id": "20261117-183723",
+  "mode": "live",
+  "reps": 5,
+  "seed": 20261117,
+  "concurrency": 4,
+  "haiku_model": "anthropic/claude-haiku-5.5",
+  "haiku_reasoning": "none",
+  "jev_model": "typesafe/jev-1.14",
+  "jev_threshold": 0.8,
+  "tms_latency_ms": 150,
+  "started": "2026-11-17 18:37:23 +0900",
+  "parts": [
+    "decisions",
+    "conversations",
+    "a2a"
+  ],
+  "finished": "2026-11-17 18:44:02 +0900",
+  "spent_usd": 0.12861617600000008
+}

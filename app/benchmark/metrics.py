@@ -174,7 +174,7 @@ def summarize_a2a(rows: list[dict], conv: list[dict]) -> dict[str, Any]:
 # ---------------------------------------------------------------------- charts
 def _style(ax, title: str, ylabel: str | None = None) -> None:
     ax.set_facecolor(SURFACE)
-    ax.set_title(title, loc="left", fontsize=11, color=INK, pad=10)
+    ax.set_title(title, loc="left", fontsize=11, color=INK, pad=28)
     if ylabel:
         ax.set_ylabel(ylabel, color=INK2, fontsize=9)
     for s in ("top", "right", "left"):
@@ -196,7 +196,8 @@ def _grouped(ax, groups: list[str], values: dict[str, list[float | None]], fmt: 
                 ax.annotate(fmt.format(v), (b.get_x() + b.get_width() / 2, b.get_height()), ha="center", va="bottom",
                             fontsize=8, color=INK2, xytext=(0, 2), textcoords="offset points")
     ax.set_xticks(range(len(groups)), groups)
-    ax.legend(frameon=False, fontsize=9, loc="upper left", bbox_to_anchor=(0, 1.0), ncol=2)
+    ax.legend(frameon=False, fontsize=9, loc="lower left", bbox_to_anchor=(0, 1.0), ncol=2)
+    ax.margins(y=0.12)
 
 
 def charts(s: dict[str, Any], out: Path) -> list[str]:
@@ -220,7 +221,7 @@ def charts(s: dict[str, Any], out: Path) -> list[str]:
 
         fig, ax = plt.subplots(figsize=(8, 4))
         data = [[t for t in s["_raw_frr"][e] if t is not None] for e in ENGINES]
-        bp = ax.boxplot(data, vert=False, widths=0.45, patch_artist=True, showfliers=True,
+        bp = ax.boxplot(data, orientation="horizontal", widths=0.45, patch_artist=True, showfliers=True,
                         medianprops={"color": INK, "linewidth": 1.5}, flierprops={"markersize": 3, "markeredgecolor": INK2})
         for patch, e in zip(bp["boxes"], ENGINES):
             patch.set_facecolor(COLOR[e])
@@ -309,6 +310,11 @@ def build_report(raw: Path) -> str:
     raw = Path(raw)
     meta = json.loads((raw / "meta.json").read_text())
     dec, conv, a2a = load(raw / "decisions.jsonl"), load(raw / "conversations.jsonl"), load(raw / "a2a.jsonl")
+    from app.benchmark.runner import tool_failure_reported
+    for x in conv:  # re-score with the current grader so older raw runs stay comparable
+        if x.get("tool_failure_handled") is not None:
+            x["tool_failure_handled"] = tool_failure_reported(x["turns"][-1]["reply"] if x["turns"] else "")
+            x["success"] = x["outcome_ok"] and x["slots_ok"] and x["tms_ok"] and x["tool_failure_handled"]
     s: dict[str, Any] = {"meta": meta}
     if dec:
         s["decisions"] = summarize_decisions(dec)

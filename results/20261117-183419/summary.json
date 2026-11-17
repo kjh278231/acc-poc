@@ -1,0 +1,537 @@
+{
+  "meta": {
+    "run_id": "20261117-183419",
+    "mode": "live",
+    "reps": 1,
+    "seed": 20261117,
+    "concurrency": 4,
+    "haiku_model": "anthropic/claude-haiku-5.5",
+    "haiku_reasoning": "none",
+    "jev_model": "typesafe/jev-1.14",
+    "jev_threshold": 0.8,
+    "tms_latency_ms": 150,
+    "started": "2026-11-17 18:34:19 +0900",
+    "parts": [
+      "decisions",
+      "conversations",
+      "a2a"
+    ],
+    "finished": "2026-11-17 18:36:16 +0900",
+    "spent_usd": 0.025361577999999996
+  },
+  "decisions": {
+    "haiku_only": {
+      "n": 30,
+      "errors": 0,
+      "accuracy": 0.9333333333333333,
+      "intent_acc": 0.9666666666666667,
+      "action_acc": 0.9333333333333333,
+      "slot_acc": 0.9666666666666667,
+      "decision_ms": {
+        "n": 30,
+        "p50": 1768.3068294718396,
+        "p95": 2623.176526950556,
+        "mean": 1902.0261678650666
+      },
+      "decision_ms_no_fallback": {
+        "n": 30,
+        "p50": 1768.3068294718396,
+        "p95": 2623.176526950556,
+        "mean": 1902.0261678650666
+      },
+      "decision_ms_fallback": {
+        "n": 0,
+        "p50": null,
+        "p95": null,
+        "mean": null
+      },
+      "accuracy_no_fallback": 0.9333333333333333,
+      "accuracy_fallback": null,
+      "ttft_ms": {
+        "n": 30,
+        "p50": 1343.7550964881666,
+        "p95": 2064.968068586313,
+        "mean": 1417.0850236337476
+      },
+      "fallback_rate": null,
+      "fallback_reasons": {},
+      "in_tokens_mean": 1690.5333333333333,
+      "out_tokens_mean": 120.9,
+      "cost_per_decision": 0.00022950333333333334,
+      "cost_actual_share": 1.0,
+      "calls_by_model": {
+        "anthropic/claude-haiku-5.5": 30
+      },
+      "by_category": {
+        "accident": 0.0,
+        "ambiguous": 1.0,
+        "breakdown": 1.0,
+        "complex": 1.0,
+        "end_call": 1.0,
+        "eta_unclear": 1.0,
+        "human": 1.0,
+        "normal": 0.8888888888888888,
+        "off_topic": 1.0,
+        "traffic": 1.0,
+        "weather": 1.0
+      },
+      "failures": [
+        [
+          "d04",
+          "20분에서 30분 사이요",
+          "ambiguous",
+          "CLARIFY",
+          "{\"eta_minutes\": null, \"issue\": null, \"delay_minutes\": null}"
+        ],
+        [
+          "d18",
+          "접촉 사고가 나서 지금 사고 처리 중이에요",
+          "provide_info",
+          "ESCALATE",
+          "{\"eta_minutes\": 40, \"issue\": \"accident\", \"delay_minutes\": null}"
+        ]
+      ]
+    },
+    "jev_haiku": {
+      "n": 30,
+      "errors": 0,
+      "accuracy": 1.0,
+      "intent_acc": 1.0,
+      "action_acc": 1.0,
+      "slot_acc": 1.0,
+      "decision_ms": {
+        "n": 30,
+        "p50": 446.0938189877197,
+        "p95": 2186.6306990006706,
+        "mean": 708.359551160053
+      },
+      "decision_ms_no_fallback": {
+        "n": 25,
+        "p50": 441.49231002666056,
+        "p95": 518.258992198389,
+        "mean": 435.8821018319577
+      },
+      "decision_ms_fallback": {
+        "n": 5,
+        "p50": 2039.4153890083544,
+        "p95": 2386.7143761832267,
+        "mean": 2070.7467978005297
+      },
+      "accuracy_no_fallback": 1.0,
+      "accuracy_fallback": 1.0,
+      "ttft_ms": {
+        "n": 30,
+        "p50": 445.98608047817834,
+        "p95": 1665.7731549785242,
+        "mean": 619.8257292310396
+      },
+      "fallback_rate": 0.16666666666666666,
+      "fallback_reasons": {
+        "off_topic": 2,
+        "low_confidence_intent": 2,
+        "multiple_time_expressions": 1
+      },
+      "in_tokens_mean": 1255.6333333333334,
+      "out_tokens_mean": 161.66666666666666,
+      "cost_per_decision": 7.977086666666666e-05,
+      "cost_actual_share": 1.0,
+      "calls_by_model": {
+        "typesafe/jev-1.14-20261014": 30,
+        "anthropic/claude-haiku-5.5": 5
+      },
+      "by_category": {
+        "accident": 1.0,
+        "ambiguous": 1.0,
+        "breakdown": 1.0,
+        "complex": 1.0,
+        "end_call": 1.0,
+        "eta_unclear": 1.0,
+        "human": 1.0,
+        "normal": 1.0,
+        "off_topic": 1.0,
+        "traffic": 1.0,
+        "weather": 1.0
+      },
+      "failures": []
+    }
+  },
+  "conversations": {
+    "haiku_only": {
+      "n_calls": 20,
+      "n_turns": 47,
+      "success_rate": 0.95,
+      "outcome_acc": 0.95,
+      "slots_acc": 0.95,
+      "wrong_termination": 1,
+      "stuck": 0,
+      "reprompts_per_call": 0.4,
+      "turns_per_call": 2.35,
+      "intent_acc_turn": 0.9361702127659575,
+      "tool_failure_handled": 0.0,
+      "scenario_ms": {
+        "n": 20,
+        "p50": 6883.153555012541,
+        "p95": 8977.82843738969,
+        "mean": 6614.371166951605
+      },
+      "first_response_ready_ms": {
+        "n": 47,
+        "p50": 2436.9411510415375,
+        "p95": 4783.393757190789,
+        "mean": 2814.5212920635263
+      },
+      "first_response_ready_ms_tool_turns": {
+        "n": 19,
+        "p50": 3921.284800977446,
+        "p95": 5120.766103413189,
+        "mean": 4080.496394418572
+      },
+      "turn_total_ms": {
+        "n": 47,
+        "p50": 2436.959589016624,
+        "p95": 4783.423740690342,
+        "mean": 2814.5449166805383
+      },
+      "decision_ms": {
+        "n": 47,
+        "p50": 1909.8582510487176,
+        "p95": 2929.9230017000814,
+        "mean": 2030.0062642398073
+      },
+      "ttft_ms": {
+        "n": 47,
+        "p50": 1455.03001997713,
+        "p95": 2527.83676769468,
+        "mean": 1581.537701998233
+      },
+      "tool_ms": {
+        "n": 19,
+        "p50": 150.79312701709569,
+        "p95": 300.8770002052188,
+        "mean": 174.4727852055803
+      },
+      "fallback_rate_turn": null,
+      "fallback_reasons": {},
+      "model_errors": 0,
+      "calls_by_model": {
+        "anthropic/claude-haiku-5.5": 66
+      },
+      "calls_per_call": {
+        "anthropic/claude-haiku-5.5": 3.3
+      },
+      "in_tokens_per_call": 4794.2,
+      "out_tokens_per_call": 363.3,
+      "cost_per_turn": 0.0002813063829787234,
+      "cost_per_call": 0.0006610699999999999,
+      "cost_per_completed_call": 0.0006958631578947368,
+      "cost_1k_calls": 0.6610699999999999,
+      "cost_10k_calls": 6.6107,
+      "cost_actual_share": 1.0,
+      "by_category": {
+        "accident": 1.0,
+        "ambiguous": 1.0,
+        "breakdown": 1.0,
+        "complex": 1.0,
+        "end_call": 1.0,
+        "eta_unclear": 1.0,
+        "human": 1.0,
+        "normal": 1.0,
+        "off_topic": 1.0,
+        "tool_failure": 0.0,
+        "traffic": 1.0,
+        "weather": 1.0
+      },
+      "by_scenario": {
+        "c01": 1.0,
+        "c02": 1.0,
+        "c03": 1.0,
+        "c04": 1.0,
+        "c05": 1.0,
+        "c06": 1.0,
+        "c07": 1.0,
+        "c08": 1.0,
+        "c09": 1.0,
+        "c10": 1.0,
+        "c11": 1.0,
+        "c12": 1.0,
+        "c13": 1.0,
+        "c14": 1.0,
+        "c15": 1.0,
+        "c16": 1.0,
+        "c17": 1.0,
+        "c18": 1.0,
+        "c19": 1.0,
+        "c20": 0.0
+      },
+      "failed_examples": [
+        {
+          "scenario": "c20",
+          "outcome": "ESCALATE",
+          "slots": {
+            "eta_minutes": null,
+            "issue": null,
+            "delay_minutes": null
+          },
+          "turns": [
+            [
+              "20분에서 30분 사이요",
+              "CLARIFY",
+              "기사님, 도착까지 20분에서 30분 정도 걸린다고 말씀해 주셨네요. 정확한 한 가지 시간으로 말씀해 주실 수 있을까요? 예를 들어 25분처럼요."
+            ],
+            [
+              "20분에서 30분 사이요",
+              "CLARIFY",
+              "기사님, 20분에서 30분 사이라고 하셨는데요, 범위 말고 한 가지 시간으로 말씀해 주시겠어요? 예를 들어 25분처럼요."
+            ],
+            [
+              "20분에서 30분 사이요",
+              "ESCALATE",
+              "죄송합니다, 지금 시스템 연결이 원활하지 않아 등록이 완료되지 않았습니다. 담당자가 다시 확인해 연락드리겠습니다."
+            ]
+          ]
+        }
+      ]
+    },
+    "jev_haiku": {
+      "n_calls": 20,
+      "n_turns": 47,
+      "success_rate": 1.0,
+      "outcome_acc": 1.0,
+      "slots_acc": 1.0,
+      "wrong_termination": 0,
+      "stuck": 0,
+      "reprompts_per_call": 0.3,
+      "turns_per_call": 2.35,
+      "intent_acc_turn": 1.0,
+      "tool_failure_handled": 1.0,
+      "scenario_ms": {
+        "n": 20,
+        "p50": 1327.3790789826307,
+        "p95": 3782.1997152874255,
+        "mean": 1638.92190369952
+      },
+      "first_response_ready_ms": {
+        "n": 47,
+        "p50": 409.80443300213665,
+        "p95": 2077.1340278966836,
+        "mean": 626.8036819764096
+      },
+      "first_response_ready_ms_tool_turns": {
+        "n": 19,
+        "p50": 392.24579598521814,
+        "p95": 1251.6157632228023,
+        "mean": 606.5054394145448
+      },
+      "turn_total_ms": {
+        "n": 47,
+        "p50": 453.8801109883934,
+        "p95": 2077.151332492942,
+        "mean": 697.3325815485256
+      },
+      "decision_ms": {
+        "n": 47,
+        "p50": 409.76606600452214,
+        "p95": 2077.088203205496,
+        "mean": 626.7550440822193
+      },
+      "ttft_ms": {
+        "n": 47,
+        "p50": 409.69037695322186,
+        "p95": 1590.6111399992378,
+        "mean": 581.9924306322603
+      },
+      "tool_ms": {
+        "n": 19,
+        "p50": 150.6910870084539,
+        "p95": 300.8715470263269,
+        "mean": 174.3616864765308
+      },
+      "fallback_rate_turn": 0.0851063829787234,
+      "fallback_reasons": {
+        "multiple_time_expressions": 1,
+        "off_topic": 2,
+        "low_confidence_intent": 1
+      },
+      "model_errors": 0,
+      "calls_by_model": {
+        "typesafe/jev-1.14-20261014": 47,
+        "anthropic/claude-haiku-5.5": 4
+      },
+      "calls_per_call": {
+        "typesafe/jev-1.14-20261014": 2.35,
+        "anthropic/claude-haiku-5.5": 0.2
+      },
+      "in_tokens_per_call": 2629.25,
+      "out_tokens_per_call": 354.75,
+      "cost_per_turn": 6.0892595744680854e-05,
+      "cost_per_call": 0.0001430976,
+      "cost_per_completed_call": 0.0001430976,
+      "cost_1k_calls": 0.1430976,
+      "cost_10k_calls": 1.430976,
+      "cost_actual_share": 1.0,
+      "by_category": {
+        "accident": 1.0,
+        "ambiguous": 1.0,
+        "breakdown": 1.0,
+        "complex": 1.0,
+        "end_call": 1.0,
+        "eta_unclear": 1.0,
+        "human": 1.0,
+        "normal": 1.0,
+        "off_topic": 1.0,
+        "tool_failure": 1.0,
+        "traffic": 1.0,
+        "weather": 1.0
+      },
+      "by_scenario": {
+        "c01": 1.0,
+        "c02": 1.0,
+        "c03": 1.0,
+        "c04": 1.0,
+        "c05": 1.0,
+        "c06": 1.0,
+        "c07": 1.0,
+        "c08": 1.0,
+        "c09": 1.0,
+        "c10": 1.0,
+        "c11": 1.0,
+        "c12": 1.0,
+        "c13": 1.0,
+        "c14": 1.0,
+        "c15": 1.0,
+        "c16": 1.0,
+        "c17": 1.0,
+        "c18": 1.0,
+        "c19": 1.0,
+        "c20": 1.0
+      },
+      "failed_examples": []
+    }
+  },
+  "a2a": {
+    "haiku_only": {
+      "n_calls": 6,
+      "n_turns": 15,
+      "violations": 0,
+      "violation_examples": [],
+      "outcome_acc": 1.0,
+      "traced_share": 1.0,
+      "connect_ms": {
+        "n": 6,
+        "p50": 1.0210309992544353,
+        "p95": 1.1313405120745301,
+        "mean": 1.0335050174035132
+      },
+      "init_ms": {
+        "n": 6,
+        "p50": 0.3556290175765753,
+        "p95": 0.3866209735861048,
+        "mean": 0.35223050508648157
+      },
+      "greeting_ms": {
+        "n": 6,
+        "p50": 0.924414984183386,
+        "p95": 1.0545367549639195,
+        "mean": 0.9201841603498906
+      },
+      "first_chunk_ms": {
+        "n": 15,
+        "p50": 2946.274411980994,
+        "p95": 3749.014678201638,
+        "mean": 2699.0163912647404
+      },
+      "turn_ms": {
+        "n": 15,
+        "p50": 2947.5332539877854,
+        "p95": 3749.7375519014895,
+        "mean": 2699.7450662660412
+      },
+      "server_ms": {
+        "n": 15,
+        "p50": 2946.142298,
+        "p95": 3748.4251064,
+        "mean": 2698.584009333333
+      },
+      "overhead_ms": {
+        "n": 15,
+        "p50": 1.110365993569303,
+        "p95": 1.4049742158055778,
+        "mean": 1.1610569327078641
+      },
+      "direct_first_response_ready_ms": {
+        "n": 15,
+        "p50": 2689.4777459674515,
+        "p95": 4050.548940798036,
+        "mean": 2820.078280137386
+      },
+      "direct_turn_total_ms": {
+        "n": 15,
+        "p50": 2689.4938109908253,
+        "p95": 4050.581395003247,
+        "mean": 2820.1010112068616
+      }
+    },
+    "jev_haiku": {
+      "n_calls": 6,
+      "n_turns": 15,
+      "violations": 0,
+      "violation_examples": [],
+      "outcome_acc": 1.0,
+      "traced_share": 1.0,
+      "connect_ms": {
+        "n": 6,
+        "p50": 0.9984390053432435,
+        "p95": 6.302756009972654,
+        "mean": 2.160342662439992
+      },
+      "init_ms": {
+        "n": 6,
+        "p50": 0.36284199450165033,
+        "p95": 0.45269796100910753,
+        "mean": 0.37622381933033466
+      },
+      "greeting_ms": {
+        "n": 6,
+        "p50": 0.9408734913449734,
+        "p95": 1.064279247657396,
+        "mean": 0.9302633310047289
+      },
+      "first_chunk_ms": {
+        "n": 15,
+        "p50": 410.9157809871249,
+        "p95": 1183.8442870124725,
+        "mean": 573.7947907454023
+      },
+      "turn_ms": {
+        "n": 15,
+        "p50": 515.7120000221767,
+        "p95": 1301.6300136048826,
+        "mean": 644.7452221415006
+      },
+      "server_ms": {
+        "n": 15,
+        "p50": 514.820568,
+        "p95": 1300.5930597000015,
+        "mean": 643.7959388666666
+      },
+      "overhead_ms": {
+        "n": 15,
+        "p50": 0.962896051183634,
+        "p95": 1.2266095258367387,
+        "mean": 0.9492832748339121
+      },
+      "direct_first_response_ready_ms": {
+        "n": 15,
+        "p50": 390.8611810184084,
+        "p95": 824.2893459741035,
+        "mean": 489.56643499744433
+      },
+      "direct_turn_total_ms": {
+        "n": 15,
+        "p50": 453.8801109883934,
+        "p95": 978.5770305024932,
+        "mean": 559.8166887958845
+      }
+    }
+  }
+}
