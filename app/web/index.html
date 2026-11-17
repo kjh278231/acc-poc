@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A/B Call Agent</title>
+<style>
+:root{--bg:#f6f6f4;--card:#fff;--ink:#0b0b0b;--ink2:#52514e;--line:#e4e3df;--a:#2a78d6;--b:#eb6834;--ok:#008300;--warn:#b26b00}
+@media (prefers-color-scheme:dark){:root{--bg:#121211;--card:#1a1a19;--ink:#f0efec;--ink2:#c3c2b7;--line:#2e2e2c;--a:#3987e5;--b:#d95926;--ok:#3fb950;--warn:#d29922}}
+*{box-sizing:border-box}body{margin:0;font:14px/1.5 system-ui,-apple-system,"Noto Sans KR",sans-serif;background:var(--bg);color:var(--ink)}
+header{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+h1{font-size:16px;margin:0 auto 0 0}
+button{font:inherit;padding:6px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;cursor:pointer}
+button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+main{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 16px}
+@media (max-width:760px){main{grid-template-columns:1fr}}
+.pane{background:var(--card);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;min-height:420px}
+.pane h2{font-size:14px;margin:0;padding:10px 12px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center}
+.dot{width:10px;height:10px;border-radius:50%}
+.log{flex:1;overflow:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;max-height:52vh}
+.msg{padding:8px 10px;border-radius:10px;max-width:92%}
+.agent{background:var(--bg);align-self:flex-start}.driver{border:1px solid var(--line);align-self:flex-end}
+.meta{font-size:11px;color:var(--ink2);margin-top:4px;font-variant-numeric:tabular-nums}
+.state{border-top:1px solid var(--line);padding:8px 12px;font-size:12px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.tag{display:inline-block;padding:0 6px;border-radius:6px;border:1px solid var(--line);font-size:11px;margin-right:4px}
+.fin{color:var(--ok);font-weight:600}
+form{display:flex;gap:8px;padding:0 16px 16px}
+input{flex:1;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 12px}
+.chips button{font-size:12px;padding:3px 8px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Haiku Only vs Jev + Haiku — 같은 입력, 두 엔진</h1>
+  <button class="primary" id="new">새 통화 시작</button>
+</header>
+<main>
+  <section class="pane" id="pane-haiku_only"><h2><span class="dot" style="background:var(--a)"></span>A. Haiku Only</h2><div class="log"></div><div class="state"></div></section>
+  <section class="pane" id="pane-jev_haiku"><h2><span class="dot" style="background:var(--b)"></span>B. Jev + Haiku</h2><div class="log"></div><div class="state"></div></section>
+</main>
+<div class="chips" id="chips"></div>
+<form id="f"><input id="t" placeholder="기사 발화를 입력하세요 (예: 한 시간 반 정도 걸려요)" autocomplete="off"><button class="primary">보내기</button></form>
+<script>
+const ENG=["haiku_only","jev_haiku"], sid={};
+const samples=["한 40분 정도 걸릴 것 같아요","글쎄요, 가봐야 알 것 같은데요","고속도로가 많이 막히네요","한 20분 정도 늦어질 것 같아요","타이어가 펑크 났어요","아니요 특별한 건 없어요","오늘 날씨 춥네요","담당자 바꿔 주세요","바빠서 끊을게요"];
+const chips=document.getElementById("chips");
+samples.forEach(s=>{const b=document.createElement("button");b.textContent=s;b.onclick=()=>send(s);chips.appendChild(b)});
+function pane(e){return document.getElementById("pane-"+e)}
+function add(e,role,text,meta){const d=document.createElement("div");d.className="msg "+role;d.textContent=text;
+  if(meta){const m=document.createElement("div");m.className="meta";m.innerHTML=meta;d.appendChild(m)}
+  const log=pane(e).querySelector(".log");log.appendChild(d);log.scrollTop=log.scrollHeight}
+function fmt(x){return x==null?"–":Math.round(x)}
+function render(e,events,state){
+  let text="",metrics=null,finish=null,tool=null;
+  for(const ev of events){if(ev.type==="text_done")text+=(text?" ":"")+ev.text;if(ev.type==="turn_end")metrics=ev.data.metrics;if(ev.type==="finish")finish=ev.data;if(ev.type==="tool_result")tool=ev.data}
+  let meta="";
+  if(metrics&&metrics.action){meta=`<span class="tag">${metrics.action}</span><span class="tag">${metrics.source}</span>`+
+    (metrics.fallback?`<span class="tag">fallback: ${metrics.fallback_reason}</span>`:"")+
+    `<br>판단 ${fmt(metrics.decision_ms)}ms · 첫 응답 ${fmt(metrics.first_response_ready_ms)}ms · 턴 ${fmt(metrics.turn_total_ms)}ms`+
+    (metrics.tool_ms?` · TMS ${fmt(metrics.tool_ms)}ms`:"")+` · $${(metrics.cost_usd||0).toFixed(6)} · tok ${metrics.input_tokens}/${metrics.output_tokens}`}
+  if(finish)meta+=`<br><span class="fin">FINISH ${finish.type} (${finish.reason})</span>`;
+  add(e,"agent",text,meta);
+  if(state){const s=state.slots;pane(e).querySelector(".state").innerHTML=
+    `ETA <b>${s.eta_minutes??"?"}</b>분 · 특이사항 <b>${s.issue??"?"}</b> · 지연 <b>${s.delay_minutes??"–"}</b>분 · TMS ${state.tms_updated?"✔ 등록":"미등록"}`+(state.finished?` · 종료: ${state.finished}`:"")}
+}
+async function start(){for(const e of ENG){pane(e).querySelector(".log").innerHTML="";pane(e).querySelector(".state").innerHTML="";
+  const r=await fetch("/api/sessions",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({engine:e})}).then(r=>r.json());
+  sid[e]=r.session_id;render(e,r.events,null)}}
+async function send(text){if(!text)return;await Promise.all(ENG.map(async e=>{add(e,"driver",text);
+  const r=await fetch(`/api/sessions/${sid[e]}/turns`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({text})}).then(r=>r.json());
+  render(e,r.events||[],r.state)}))}
+document.getElementById("new").onclick=start;
+document.getElementById("f").onsubmit=ev=>{ev.preventDefault();const t=document.getElementById("t");send(t.value.trim());t.value=""};
+start();
+</script>
+</body>
+</html>
