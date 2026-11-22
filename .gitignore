@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+*.wav
+.claude/
+# draw.io desktop backup/temp files
+docs/.$*
+# account ID, ARNs and endpoints of the deployed stack
+config/*.outputs.env
+# workshop downloads (public, see docs/00-overview.md 8. 참고 자료)
+reference/

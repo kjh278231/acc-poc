@@ -1,0 +1,19 @@
+# Bridge runtime dependencies, pinned to versions verified together on Python 3.15
+# (the image's python:3.15-slim). aiohttp 3.14.5 is the first release with CPython
+# 3.15 wheels.
+# aws-sdk-bedrock-runtime is the experimental Nova Sonic bidirectional SDK; it
+# pulls its own smithy-core / smithy-aws-core / smithy-http / awscrt chain, so we
+# pin only what we import directly plus the SDK itself.
+aws-sdk-bedrock-runtime==0.12.0
+aiohttp==3.14.5
+boto3==1.43.123
+botocore==1.43.123
+# Pinned transitively-critical smithy chain so a later SDK point release cannot
+# shift the bidirectional-stream API out from under the bridge.
+smithy-core==0.9.0
+smithy-aws-core==0.12.0
+smithy-http==0.6.0
+# awscrt MUST expose awscrt.aio.http: the SDK's default AIOHTTPClient transport
+# does NOT support duplex streaming, so the bridge forces smithy_http.aio.crt
+# (AWSCRTHTTPClient). awscrt 0.26.x lacks awscrt.aio and smithy sets HAS_CRT=False.
+awscrt==0.38.0
