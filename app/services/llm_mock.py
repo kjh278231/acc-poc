@@ -11,6 +11,7 @@ import time
 from typing import Any
 
 from app.core.decision import ModelCall
+from app.core.progress import tracked
 from app.services.parser import is_negative_issue, parse_duration
 
 ISSUE_KW = [("accident", ["사고", "접촉"]), ("breakdown", ["고장", "펑크", "엔진", "퍼졌"]),
@@ -49,6 +50,9 @@ class MockLLM:
                          output_tokens=tout, cost_usd=cost, start_ns=start_ns, end_ns=time.time_ns())
 
     async def chat_json(self, messages, schema, *, purpose: str, max_tokens: int | None = None):
+        return await tracked("mock/haiku", purpose, self._chat_json(messages, purpose))
+
+    async def _chat_json(self, messages, purpose: str):
         start_ns, t0 = time.time_ns(), time.perf_counter()
         await asyncio.sleep(self.haiku_latency_s)
         self.calls.append(f"haiku:{purpose}")
@@ -73,6 +77,9 @@ class MockLLM:
         return out, self._call("mock/haiku", purpose, start_ns, t0, 900, 80, 0.00013)
 
     async def systemone(self, state, questions, *, purpose: str = "jev_decide"):
+        return await tracked("mock/jev", purpose, self._systemone(state, purpose))
+
+    async def _systemone(self, state, purpose: str):
         start_ns, t0 = time.time_ns(), time.perf_counter()
         await asyncio.sleep(self.jev_latency_s)
         self.calls.append("jev")

@@ -11,6 +11,10 @@ dependencies = [
   "pydantic-settings>=2.3",
   "websockets>=12",
   "matplotlib>=3.8",
+  "boto3>=1.44.4",
+  "amazon-transcribe>=0.6.4",
+  "onnxruntime>=1.32.0",
+  "numpy>=2.4.6",
 ]
 
 [dependency-groups]

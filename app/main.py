@@ -10,7 +10,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
-from app.adapters import a2a_server, rest, results_api
+from app.adapters import a2a_server, rest, results_api, voice_ws
 from app.adapters.a2a import A2AProtocol
 from app.factory import build_orchestrator
 
@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 WEB = Path(__file__).parent / "web"
 
 
-def create_app(orch=None) -> FastAPI:
+def create_app(orch=None, voice_deps=None) -> FastAPI:
     """Agent (UI chat + REST + A2A) and the results dashboard. Without an API key the agent routes are disabled
     and only the dashboard is served."""
     log = logging.getLogger("app")
@@ -35,10 +35,15 @@ def create_app(orch=None) -> FastAPI:
         app.state.a2a = A2AProtocol(orch)
         app.include_router(rest.build_router(orch))
         app.include_router(a2a_server.build_router(app.state.a2a))
+        app.include_router(voice_ws.build_router(orch, voice_deps))
 
     @app.get("/")
     async def index():
         return FileResponse(WEB / ("index.html" if orch is not None else "results.html"))
+
+    @app.get("/voice")
+    async def voice():
+        return FileResponse(WEB / ("voice.html" if orch is not None else "results.html"))
 
     @app.get("/results")
     async def results():

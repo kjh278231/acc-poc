@@ -31,6 +31,10 @@ uv run pytest -q                                       # 단위·통합·A2A 프
 uv run uvicorn app.main:create_app --factory --port 8080   # http://127.0.0.1:8080  A/B 나란히 대화하는 UI
 LLM_MODE=mock uv run uvicorn app.main:create_app --factory --port 8080   # 키 없이 UI/프로토콜 확인
 
+# 음성 통화 (브라우저 마이크, http://127.0.0.1:8080/voice) — AWS 자격증명(~/.aws, 기본 체인) 필요: Transcribe 스트리밍 + Polly
+#   VAD(Silero ONNX)는 첫 실행 때 .cache/models/ 로 받음. 이어폰 권장.
+uv run python -m app.voice.simulate --engine both      # 브라우저 없이: 합성 기사 음성으로 같은 경로의 지연 측정
+
 # 로컬 Mock Connect 클라이언트로 A2A 호출 (WS 또는 HTTPS)
 uv run python -m app.adapters.mock_connect --url ws://127.0.0.1:8080/a2a/ws --key local-dev-key --say "한 시간 정도요" --say "없어요"
 uv run python -m app.adapters.mock_connect --url http://127.0.0.1:8080/a2a --key local-dev-key
@@ -64,13 +68,13 @@ uv run uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8080
 
 ```text
 app/
-  adapters/  rest.py (UI/REST/WS) · a2a.py (A2A 프로토콜) · a2a_server.py (HTTPS/WSS 전송) · mock_connect.py (Connect 대역 클라이언트)
+  adapters/  rest.py (UI/REST/WS) · voice_ws.py (음성 WS) · a2a.py (A2A 프로토콜) · a2a_server.py (HTTPS/WSS 전송) · mock_connect.py (Connect 대역 클라이언트)
   core/      orchestrator.py · state.py · rules.py (결정적 규칙) · events.py (공통 입출력 계약) · decision.py
   engines/   haiku_only.py · jev_haiku.py
   services/  llm.py (OpenRouter: Haiku 스트리밍 + Jev systemone) · llm_mock.py · parser.py (한국어 시간 파서) · responses.py · tms_mock.py
-  voice/     stt.py · tts.py (인터페이스만, Phase 3)
+  voice/     stt.py · tts.py (인터페이스) · vad.py (Silero VAD·턴 감지) · aws.py (Transcribe·Polly) · cache.py · pipeline.py · simulate.py
   benchmark/ cases.py (결정 30건, 통화 시나리오 20건) · runner.py · metrics.py (요약·차트·리포트)
-  web/       index.html
+  web/       index.html (텍스트 A/B) · voice.html (음성 통화) · results.html
 docs/        architecture.md · connect-integration.md · voice-design.md · cost-model.md
 ```
 
@@ -85,6 +89,6 @@ docs/        architecture.md · connect-integration.md · voice-design.md · cos
 
 ## 범위와 한계
 
-- STT/TTS는 인터페이스만 (docs/voice-design.md). 실제 Amazon Connect 통합 테스트는 수행하지 않았다 (docs/connect-integration.md의 Phase 2 체크리스트).
+- 음성은 웹 마이크 경로만 구현 (Transcribe·Polly·서버 VAD, docs/voice-design.md). Connect 오디오 스트리밍(A2A audio/lpcm) 경로는 미연결. 실제 Amazon Connect 통합 테스트는 수행하지 않았다 (docs/connect-integration.md의 Phase 2 체크리스트).
 - Haiku는 사용자 요구대로 OpenRouter의 OpenAI 호환 chat completions로 호출한다 (Anthropic SDK 직접 호출 아님). 프롬프트 캐싱은 시스템 프롬프트가 최소 캐시 길이보다 짧아 적용하지 않았다.
 - 세션 상태는 프로세스 메모리. 비용은 모델 API만 (docs/cost-model.md).

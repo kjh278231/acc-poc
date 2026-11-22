@@ -18,7 +18,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, PlainTextResponse
 
-from app.config import ROOT
+from app.config import ROOT, get_settings
 
 RESULTS = ROOT / "results"
 RAW = RESULTS / "raw"
@@ -164,6 +164,8 @@ def build_router() -> APIRouter:
 
     @r.post("/tests/run")
     async def run_tests() -> dict[str, Any]:
+        if not get_settings().allow_test_runner:
+            raise HTTPException(403, "test runner is disabled on this deployment (ALLOW_TEST_RUNNER=false)")
         if _test_lock.locked():
             raise HTTPException(409, "a test run is already in progress")
         async with _test_lock:

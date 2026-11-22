@@ -1,4 +1,4 @@
-"""Text-to-speech + audio pipeline interfaces (Phase 3). Interfaces only.
+"""Text-to-speech + audio pipeline interfaces. Implementations: voice/aws.py (Polly), voice/pipeline.py, voice/cache.py.
 
 How the pieces will connect to the existing (unchanged) orchestrator:
 
@@ -24,7 +24,7 @@ from app.voice.stt import AudioFormat
 
 
 class TextToSpeech(Protocol):
-    async def stream(self, text: str, fmt: AudioFormat, *, voice: str | None = None,
+    async def stream(self, text: str, fmt: AudioFormat, *, voice: str | None = None, engine: str | None = None,
                      speaking_rate: float = 1.0) -> AsyncIterator[bytes]:
         """Yield PCM chunks at `fmt` as soon as they are synthesised."""
         ...

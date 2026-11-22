@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run pytest *)",
+      "Bash(uv run pytest)",
+      "Bash(uv run python -m app.*)",
+      "Bash(uv sync *)",
+      "Bash(uv sync)",
+      "Bash(git status *)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git diff)",
+      "Bash(git log *)",
+      "Bash(curl -s 127.0.0.1:*)",
+      "Bash(curl -s http://127.0.0.1:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./deploy/.secrets)",
+      "Read(~/.ssh/acc-poc.pem)"
+    ]
+  }
+}

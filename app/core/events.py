@@ -41,6 +41,7 @@ class EventType(str, Enum):
     TOOL_RESULT = "tool_result"
     FINISH = "finish"              # COMPLETE / ESCALATE: conversation is over
     TURN_END = "turn_end"          # carries metrics + spans for the turn
+    STAGE = "stage"                # live progress inside a turn (model calls, decision, rules); UI only, A2A ignores it
     ERROR = "error"
 
 

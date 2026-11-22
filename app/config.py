@@ -43,6 +43,28 @@ class Settings(BaseSettings):
     a2a_engine: str = "jev_haiku"  # engine used for Connect sessions
 
     bench_max_cost_usd: float = 2.0
+    allow_test_runner: bool = True  # set false on any network-exposed deployment (it runs pytest in a subprocess)
+
+    # ---- voice (web mic conversation; STT/TTS/VAD owned by this server) ----
+    voice_mode: str = "aws"  # aws (Transcribe streaming + Polly) | mock (silent TTS, STT unavailable; tests inject fakes)
+    aws_region: str = "ap-northeast-2"
+    voice_sample_rate: int = 16000  # browser sends / receives 16-bit mono PCM at this rate (Polly pcm: 8000|16000)
+    polly_voice: str = "Seoyeon"  # ko-KR: Seoyeon (neural/generative/standard), Jihye (neural), Hyunduk (generative)
+    polly_engine: str = "generative"  # generative: more natural (first audio ~220 ms vs ~80 ms for neural)
+    transcribe_vocabulary: str = ""  # optional pre-created Transcribe custom vocabulary name (phrase hints)
+    vad_model_url: str = "https://raw.githubusercontent.com/snakers4/silero-vad/v6.2/src/silero_vad/data/silero_vad.onnx"
+    vad_model_sha256: str = "1a153a22f4509e292a94e67d6f9b85e8deb25b4988682b7e174c65279d8788e3"
+    vad_threshold: float = 0.5        # speech prob to count a frame as speech
+    vad_neg_threshold: float = 0.35   # prob below which a frame counts as silence (hysteresis)
+    vad_min_speech_ms: int = 160      # speech needed to open a turn
+    vad_barge_in_ms: int = 400        # speech needed to interrupt the agent while it is talking (echo / cough guard)
+    vad_silence_ms: int = 700         # silence that ends a turn
+    vad_short_silence_ms: int = 350   # ... when the partial transcript already ends like a sentence (요/다/까/.)
+    stt_final_timeout_s: float = 3.0
+    filler_after_ms: int = 900        # play a filler if no reply text this long after the transcript (when enabled)
+    # Approximate list prices for the voice cost estimate (USD; us-east-1, verify for ap-northeast-2 before quoting)
+    transcribe_price_per_min: float = 0.024
+    polly_price_per_mchar: dict[str, float] = {"standard": 4.0, "neural": 16.0, "generative": 30.0}
 
     @property
     def is_mock(self) -> bool:

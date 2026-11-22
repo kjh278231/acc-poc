@@ -1,4 +1,4 @@
-"""Speech-to-text interface (Phase 3). Interfaces only — no implementation in Phase 1.
+"""Speech-to-text interfaces. Implementations: voice/aws.py (Transcribe streaming), voice/vad.py (TurnDetector).
 
 Ownership (Connect "talk to the customer" with audioStreamingEnabled=true): Connect does NOT run STT, TTS or
 turn detection for an external agent. This service owns them. The decision engines stay text-in / text-out:

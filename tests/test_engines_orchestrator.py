@@ -107,3 +107,49 @@ async def test_finished_session_rejects_turns(orch):
     s, _ = await _talk(orch, "jev_haiku", ["담당자 바꿔줘요"])
     evs = await orch.run_turn(InputMessage(session_id=s.state.session_id, text="여보세요"))
     assert evs[0].type == EventType.ERROR
+
+
+# ---------------------------------------------------------------------------- live STAGE events
+def _stages(evs):
+    return [e.data["stage"] for e in evs if e.type.value == "stage"]
+
+
+async def test_stage_events_jev_template_turn(orch):
+    from app.core.events import InputKind, InputMessage
+
+    sid = orch.create_session("jev_haiku").state.session_id
+    opening = await orch.run_turn(InputMessage(session_id=sid, kind=InputKind.START))
+    assert _stages(opening) == ["rules", "reply"]
+    evs = await orch.run_turn(InputMessage(session_id=sid, text="40분 걸려요"))
+    st = _stages(evs)
+    assert st == ["decide_start", "model_start", "model_end", "decided", "rules", "reply"]
+    first_text = next(i for i, e in enumerate(evs) if e.type.value == "text_chunk")
+    assert max(i for i, e in enumerate(evs) if e.type.value == "stage") < first_text
+    rules = next(e.data for e in evs if e.type.value == "stage" and e.data["stage"] == "rules")
+    assert rules["action"] == "ASK_ISSUE" and rules["slots"]["eta_minutes"] == 40 and rules["slots"]["pending"] == "issue"
+    calls = [e.data["model"] for e in evs if e.type.value == "stage" and e.data["stage"] == "model_start"]
+    assert calls == ["mock/jev"]
+
+
+async def test_stage_events_show_fallback_to_haiku(orch):
+    from app.core.events import InputKind, InputMessage
+
+    sid = orch.create_session("jev_haiku").state.session_id
+    await orch.run_turn(InputMessage(session_id=sid, kind=InputKind.START))
+    evs = await orch.run_turn(InputMessage(session_id=sid, text="음"))  # low Jev confidence -> Haiku fallback
+    models = [e.data["model"] for e in evs if e.type.value == "stage" and e.data["stage"] == "model_start"]
+    assert models == ["mock/jev", "mock/haiku"]
+    decided = next(e.data for e in evs if e.type.value == "stage" and e.data["stage"] == "decided")
+    assert decided["fallback_reason"]
+
+
+async def test_stage_events_haiku_compose_after_tool(orch):
+    from app.core.events import InputKind, InputMessage
+
+    sid = orch.create_session("haiku_only").state.session_id
+    await orch.run_turn(InputMessage(session_id=sid, kind=InputKind.START))
+    await orch.run_turn(InputMessage(session_id=sid, text="40분 걸려요"))
+    evs = await orch.run_turn(InputMessage(session_id=sid, text="없어요"))
+    seq = [e.data["stage"] + ":" + e.data.get("purpose", "") if e.type.value == "stage" else e.type.value for e in evs]
+    i_tool, i_compose = seq.index("tool_result"), seq.index("model_start:compose")
+    assert i_tool < i_compose < seq.index("text_chunk")

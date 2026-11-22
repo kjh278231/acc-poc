@@ -15,6 +15,7 @@ import httpx
 
 from app.config import Settings
 from app.core.decision import ModelCall
+from app.core.progress import tracked
 
 RETRY_STATUS = {408, 429, 500, 502, 503, 504, 529}
 
@@ -68,7 +69,7 @@ class OpenRouterClient:
             "reasoning": self._reasoning(),
             "response_format": {"type": "json_schema", "json_schema": {"name": "turn", "strict": True, "schema": schema}},
         }
-        text, call = await self._stream_chat(body, purpose)
+        text, call = await tracked(self.s.haiku_model, purpose, self._stream_chat(body, purpose))
         try:
             return extract_json(text), call
         except (json.JSONDecodeError, ValueError) as e:
@@ -134,7 +135,7 @@ class OpenRouterClient:
         last: Exception | None = None
         for model in models:
             try:
-                return await self._systemone(model, state, questions, purpose)
+                return await tracked(model, purpose, self._systemone(model, state, questions, purpose))
             except LLMError as e:
                 last = e
                 if e.status not in (400, 404):  # only an unknown/unsupported model id moves to the fallback model

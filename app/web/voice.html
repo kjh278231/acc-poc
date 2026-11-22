@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice Call Agent</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect x=%226%22 y=%221%22 width=%224%22 height=%229%22 rx=%222%22 fill=%22%23eb6834%22/%3E%3Cpath d=%22M3 8a5 5 0 0 0 10 0M8 13v2%22 stroke=%22%232a78d6%22 stroke-width=%221.6%22 fill=%22none%22/%3E%3C/svg%3E">
+<style>
+:root{--bg:#f6f6f4;--card:#fff;--ink:#0b0b0b;--ink2:#52514e;--ink3:#8a8984;--line:#e4e3df;--a:#2a78d6;--b:#eb6834;--ok:#008300;--warn:#b26b00;--err:#c4302b;
+  --seg-end:#b8b6ae;--seg-stt:#8b6cd6;--seg-tts:#2f9e6e;
+  --canvas:#f3f3f1;--dot:#d6d5d0;--edge:#c9c7c0;--flow:#f0661c;--flow-soft:#f6a77a;--sel:#2a78d6;
+  --h-start:#111;--h-start-ink:#fff;--h-basic:#e3f5d3;--h-listen:#d9e9fb;--h-jev:#e6f7b8;--h-haiku:#fde3cc;--h-rules:#e7defb;
+  --h-loop:#fbd5e1;--h-esc:#f9c9cf;--h-tool:#cfefe9;--h-end:#e6e5e1}
+@media (prefers-color-scheme:dark){:root{--bg:#121211;--card:#1d1d1c;--ink:#f0efec;--ink2:#c3c2b7;--ink3:#8d8c85;--line:#2e2e2c;--a:#3987e5;--b:#d95926;--ok:#3fb950;--warn:#d29922;--err:#f0605a;
+  --seg-end:#6b6a64;--seg-stt:#a48bf0;--seg-tts:#3fb98a;
+  --canvas:#161615;--dot:#2c2c2a;--edge:#44433f;--flow:#ff7a33;--flow-soft:#9a5634;--sel:#5aa0f0;
+  --h-start:#f0efec;--h-start-ink:#111;--h-basic:#24361b;--h-listen:#1b2b3e;--h-jev:#2f3a14;--h-haiku:#40291a;--h-rules:#2c2440;
+  --h-loop:#40202b;--h-esc:#4a1e25;--h-tool:#173832;--h-end:#2d2d2b}}
+*{box-sizing:border-box}body{margin:0;font:14px/1.5 system-ui,-apple-system,"Noto Sans KR",sans-serif;background:var(--bg);color:var(--ink)}
+header{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+h1{font-size:16px;margin:0 auto 0 0}
+header a{color:var(--ink2);font-size:13px}
+button,select{font:inherit;padding:6px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;cursor:pointer}
+button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button.hang{background:var(--err);border-color:var(--err);color:#fff}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px}
+.card h2{font-size:13px;margin:0;padding:10px 12px;border-bottom:1px solid var(--line);color:var(--ink2);font-weight:600}
+.wrap{padding:12px 16px;display:flex;flex-direction:column;gap:12px}
+/* ---- call bar ---- */
+.callbar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding:10px 12px}
+.callbar label{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--ink2)}
+.callbar input[type=range]{width:96px}
+.meter{flex:1;min-width:120px;height:10px;background:var(--bg);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--ink3);transition:width .08s}
+.meter.on i{background:var(--ok)}
+.status{font-size:12px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.caption{margin:0 12px 10px;padding:7px 10px;border:1px dashed var(--line);border-radius:8px;min-height:36px;color:var(--ink2);font-size:13px}
+/* ---- studio: canvas + inspector ---- */
+.studio{display:grid;grid-template-columns:minmax(0,1fr) 330px;overflow:hidden;height:min(640px,78vh)}
+@media (max-width:900px){.studio{grid-template-columns:1fr;height:auto}.studio .vp{height:62vh}}
+.cv{position:relative;display:flex;flex-direction:column;min-width:0;border-right:1px solid var(--line)}
+.tools{position:absolute;left:10px;top:10px;z-index:3;display:flex;gap:6px;align-items:center;flex-wrap:wrap;right:10px;pointer-events:none}
+.tools>*{pointer-events:auto}
+.tb{display:flex;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.tb button{border:0;padding:3px 9px;font-size:12px;border-radius:7px;background:transparent}
+.tb button:hover{background:var(--bg)}.tb button.on{background:var(--ink);color:var(--bg)}
+.chips{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px 10px;font-size:12px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.chips b{color:var(--ink)}
+.vp{position:relative;flex:1;overflow:hidden;cursor:grab;background-color:var(--canvas);
+  background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:18px 18px}
+.vp.drag{cursor:grabbing}
+.world{position:absolute;left:0;top:0;transform-origin:0 0}
+.world svg{position:absolute;left:0;top:0;overflow:visible}
+.e{fill:none;stroke:var(--edge);stroke-width:1.5}
+.e.call{stroke:var(--flow-soft);stroke-width:2}
+.e.turn{stroke:var(--flow);stroke-width:2.5}
+.e.live{stroke:var(--flow);stroke-width:3;stroke-dasharray:7 6;animation:dash .6s linear infinite}
+.e.hide{display:none}
+@keyframes dash{to{stroke-dashoffset:-13}}
+.nd{position:absolute;width:176px;background:var(--card);border:1px solid var(--line);border-radius:9px;font-size:11.5px;line-height:1.35;
+  box-shadow:0 1px 2px rgba(0,0,0,.05);transition:box-shadow .2s,border-color .2s,opacity .2s;cursor:pointer}
+.nd .hd{display:flex;align-items:center;gap:5px;padding:3px 8px;border-radius:8px 8px 0 0;font-size:10.5px;color:var(--ink2);border-bottom:1px solid var(--line)}
+.nd .hd .cnt{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--ink2)}
+.nd .ti{padding:5px 8px 0;font-weight:600;font-size:12px}
+.nd .st{padding:1px 8px 5px;color:var(--ink2);min-height:16px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.nd .outs{border-top:1px solid var(--line);padding:2px 0}
+.nd .o{display:flex;justify-content:flex-end;align-items:center;gap:6px;padding:1px 0 1px 8px;font-size:10.5px;color:var(--ink2);height:17px}
+.nd .o i,.nd .in{display:block;width:9px;height:9px;border-radius:50%;background:var(--flow);margin-right:-5px;border:2px solid var(--card);box-sizing:content-box}
+.nd .o.taken{color:var(--flow);font-weight:600}
+.nd .in{position:absolute;left:-6px;top:6px;background:var(--edge)}
+.t-start .hd{background:var(--h-start);color:var(--h-start-ink);border-color:var(--h-start)}
+.t-basic .hd{background:var(--h-basic)}.t-listen .hd{background:var(--h-listen)}.t-jev .hd{background:var(--h-jev)}
+.t-haiku .hd{background:var(--h-haiku)}.t-rules .hd{background:var(--h-rules)}.t-loop .hd{background:var(--h-loop)}
+.t-esc .hd{background:var(--h-esc)}.t-tool .hd{background:var(--h-tool)}.t-end .hd{background:var(--h-end)}
+.nd.visited{border-color:var(--flow-soft)}
+.nd.active{border-color:var(--flow);box-shadow:0 0 0 3px color-mix(in srgb,var(--flow) 28%,transparent),0 6px 18px rgba(0,0,0,.12)}
+.nd.active .st{color:var(--flow);font-weight:600}
+.nd.active .hd::after{content:"";width:7px;height:7px;border-radius:50%;background:var(--flow);animation:pulse 1s infinite;margin-left:4px}
+.nd.sel{outline:2px solid var(--sel);outline-offset:2px}
+.nd.dim{opacity:.35}
+.nd.warn .st{color:var(--warn)}
+@keyframes pulse{50%{opacity:.2}}
+@media (prefers-reduced-motion:reduce){.e.live,.nd.active .hd::after{animation:none}}
+/* ---- inspector ---- */
+.insp{overflow:auto;padding:14px 16px;font-size:13px}
+.insp .ih{display:flex;align-items:center;gap:8px;color:var(--ink2);font-size:12px}
+.insp .pill{padding:1px 8px;border-radius:6px;font-size:11px;color:var(--ink)}
+.insp h3{font-size:19px;line-height:1.3;margin:8px 0 6px;font-weight:600}
+.insp .desc{color:var(--ink2);margin:0 0 12px;line-height:1.6}
+.insp h4{font-size:13px;margin:14px 0 6px;display:flex;align-items:center;gap:6px}
+.insp dl{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:0;font-variant-numeric:tabular-nums}
+.insp dt{color:var(--ink2)}.insp dd{margin:0;overflow-wrap:anywhere}
+.mod{border:1px solid var(--line);border-radius:9px;padding:6px 9px;margin-bottom:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12px}
+.mod .k{background:var(--h-loop);border-radius:6px;padding:0 6px}.mod .v{font-weight:600}
+.msgbox{border:1px solid var(--line);border-radius:9px;padding:9px 11px;background:var(--bg);line-height:1.6}
+.callrow{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:3px 0;font-variant-numeric:tabular-nums}
+.badge{display:inline-block;font-size:10.5px;padding:0 5px;border-radius:5px;border:1px solid var(--warn);color:var(--warn)}
+.follow{margin-left:auto;font-size:12px;color:var(--ink2);display:flex;gap:4px;align-items:center}
+/* ---- log + side ---- */
+.bottom{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:12px}
+@media (max-width:900px){.bottom{grid-template-columns:1fr}}
+.log{padding:10px 12px;display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow:auto}
+.msg{padding:8px 10px;border-radius:10px;max-width:92%}
+.agent{background:var(--bg);align-self:flex-start}.driver{border:1px solid var(--line);align-self:flex-end}
+.agent.cut{opacity:.6}
+.meta{font-size:11px;color:var(--ink2);margin-top:4px;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;padding:0 6px;border-radius:6px;border:1px solid var(--line);font-size:11px;margin:0 4px 2px 0}
+.bar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin:4px 0 2px;background:var(--line);max-width:420px}
+.bar span{display:block;height:100%}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--ink2);padding:8px 12px;border-bottom:1px solid var(--line)}
+.legend b{display:inline-block;width:10px;height:8px;border-radius:2px;margin-right:4px;vertical-align:middle}
+table{width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 6px;text-align:right;border-bottom:1px solid var(--line)}th:first-child,td:first-child{text-align:left}
+th{color:var(--ink2);font-weight:600}
+.note{font-size:12px;color:var(--ink2);padding:10px 12px;line-height:1.6}
+.err{color:var(--err)}.fin{color:var(--ok);font-weight:600}
+.side{display:flex;flex-direction:column;gap:12px}
+form{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}
+form input{flex:1;min-width:0;font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+</style>
+</head>
+<body>
+<header>
+  <h1>음성 통화 — 워크플로 실시간 추적</h1>
+  <a href="/">텍스트 A/B 대화</a><a href="/results">벤치마크 결과</a>
+</header>
+<div class="wrap">
+<section class="card">
+  <div class="callbar">
+    <label>엔진 <select id="engine"><option value="jev_haiku">B. Jev + Haiku</option><option value="haiku_only">A. Haiku Only</option></select></label>
+    <label>목소리 <select id="voice"></select></label>
+    <label><input type="checkbox" id="barge" checked> 끼어들기</label>
+    <label><input type="checkbox" id="filler"> 대기 멘트</label>
+    <label title="이 시간 동안 조용하면 말이 끝난 것으로 판단">무음 <input type="range" id="sil" min="400" max="1500" step="50"> <span id="silv"></span>ms</label>
+    <label title="문장이 '~요/~다/~까'로 끝났을 때 더 짧게 판단">문장끝 <input type="range" id="ssil" min="200" max="800" step="50"> <span id="ssilv"></span>ms</label>
+    <button class="primary" id="call">통화 시작</button>
+    <div class="meter" id="meter" title="서버 VAD 음성 확률"><i></i></div>
+    <span class="status" id="status">대기</span>
+  </div>
+  <div class="caption" id="caption">통화를 시작하면 에이전트가 먼저 말합니다. 이어폰을 권장합니다 (스피커 소리가 마이크로 들어가면 에이전트가 스스로 끊길 수 있음).</div>
+</section>
+
+<section class="card studio">
+  <div class="cv">
+    <div class="tools">
+      <div class="tb"><button id="z-fit" title="화면에 맞춤">맞춤</button><button id="z-out">−</button><button id="z-in">+</button></div>
+      <div class="tb"><button id="f-follow" class="on" title="활성 노드를 따라 인스펙터 전환">따라가기</button></div>
+      <div class="chips" id="slotchips">ETA <b>–</b> · 특이사항 <b>–</b> · 지연 <b>–</b> · TMS <b>–</b></div>
+    </div>
+    <div class="vp" id="vp"><div class="world" id="world"><svg id="edges"></svg></div></div>
+  </div>
+  <aside class="insp" id="insp"></aside>
+</section>
+
+<div class="bottom">
+  <section class="card">
+    <div class="legend"><span><b style="background:var(--seg-end)"></b>턴 종료 대기(VAD)</span><span><b style="background:var(--seg-stt)"></b>STT 확정</span>
+      <span><b id="lg-eng" style="background:var(--b)"></b>엔진 판단·응답</span><span><b style="background:var(--seg-tts)"></b>TTS 첫 소리</span><span>= 말 끝 → 첫 응답 소리</span></div>
+    <div class="log" id="log"></div>
+    <form id="f"><input id="t" placeholder="마이크 없이 텍스트로 턴 보내기 (STT 생략)" autocomplete="off"><button>보내기</button></form>
+  </section>
+  <aside class="side">
+    <section class="card"><h2>이번 페이지 누적 지연 (P50, ms)</h2>
+      <table><thead><tr><th>엔진</th><th>턴</th><th>응답</th><th>엔진</th><th>STT</th><th>TTS</th><th>캐시</th></tr></thead><tbody id="sum"></tbody></table>
+      <div class="note" id="cost"></div></section>
+    <section class="card"><h2>구성</h2><div class="note" id="cfg"></div></section>
+  </aside>
+</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let CFG=null, ws=null, ac=null, mic=null, node=null, sources=[], nextT=0, lastAgent=null, inCall=false, ended=false;
+const rows=[];
+const fmt=x=>x==null?"–":Math.round(x);
+const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+const median=a=>{if(!a.length)return null;const s=[...a].sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2};
+
+async function init(){
+  CFG=await fetch("/api/voice/config").then(r=>r.json());
+  for(const v of CFG.voices){const o=document.createElement("option");o.value=v.voice+"/"+v.engine;o.textContent=v.label;$("voice").appendChild(o)}
+  $("voice").value=CFG.default_voice.voice+"/"+CFG.default_voice.engine;
+  $("sil").value=CFG.vad.silence_ms;$("ssil").value=CFG.vad.short_silence_ms;
+  const sync=()=>{$("silv").textContent=$("sil").value;$("ssilv").textContent=$("ssil").value};$("sil").oninput=$("ssil").oninput=sync;sync();
+  $("engine").onchange=()=>{$("lg-eng").style.background=`var(--${$("engine").value==="haiku_only"?"a":"b"})`;if(!inCall)FLOW.build($("engine").value)};
+  $("cfg").innerHTML=`모드 <b>${CFG.mode}</b> · 리전 ${CFG.region} · PCM ${CFG.sample_rate/1000} kHz<br>VAD: 서버 Silero, 시작 ${CFG.vad.min_speech_ms}ms 이상 발화, 에이전트 말하는 중 끼어들기는 ${CFG.vad.barge_in_ms}ms 이상<br>STT: Amazon Transcribe 스트리밍 (ko-KR) · TTS: Amazon Polly`+(CFG.mode==="mock"?`<br><span class="err">mock 모드: STT 없음 (텍스트 입력만), TTS는 무음</span>`:"");
+  FLOW.build($("engine").value);
+}
+
+// =====================================================================================================
+// Workflow canvas: the agent's real call flow as a node graph; live highlighting from server events.
+// =====================================================================================================
+const FLOW=(()=>{
+  const W=1590,H=800,NW=176,BUS=16;
+  const ISSUE={none:"없음",traffic:"교통 체증",breakdown:"차량 고장",accident:"사고",weather:"기상 악화",other:"기타"};
+  const mins=m=>m==null?"–":m===0?"도착":(m>=60?Math.floor(m/60)+"시간"+(m%60?" "+m%60+"분":""):m+"분");
+  const mname=m=>/jev/i.test(m)?"Jev"+(m.includes("-")?" "+m.split("-").pop():""):/haiku/i.test(m)?"Haiku":m;
+  const ACTIONS=["ASK_ETA","ASK_ISSUE","ASK_DELAY","CLARIFY","ANSWER_OTHER","COMPLETE","ESCALATE","END_CALL"];
+  const LOOPERS=new Set(["greet","ASK_ETA","ASK_ISSUE","ASK_DELAY","CLARIFY","ANSWER_OTHER"]);
+  const TYPES={start:"▶ Start",basic:"◯ Basic · 템플릿",listen:"◉ Listen · VAD/STT",jev:"✦ Generative · Jev",haiku:"✦ Generative · Haiku",
+    rules:"⚖ Rules · 결정적",loop:"↻ Loop",esc:"☎ Escalate",tool:"⚙ Tool · TMS",end:"■ End"};
+  let engine="jev_haiku";
+  const N={};       // id -> {def, el, st}
+  let E=[];         // edges {key, from, port, to, kind, el}
+  let D={};         // id -> details
+  let callEdges=new Set(), turnEdges=new Set(), live=null, active=new Set(), visited=new Set(), counts={};
+  let lastAction=null, judge=null, follow=true, sel=null, playing=false, staleTurn=null, curTurn=null, opening=true;
+  let view={s:1,x:0,y:0};
+
+  function defs(){
+    const A=engine==="haiku_only";
+    const q=(id,y,title,desc,type="basic")=>({id,type,x:960,y,title,desc,outs:[["next","다음 발화"]]});
+    return [
+      {id:"start",type:"start",x:30,y:44,title:"통화 시작",desc:"아웃바운드 통화가 연결되면 세션을 만들고 에이전트가 먼저 말합니다.",outs:[["next","Next"]]},
+      {id:"greet",type:"basic",x:30,y:176,title:"인사 + ETA 질문",desc:"고정 템플릿 인사와 도착 예정 시간 질문. 템플릿이라 TTS 캐시에서 바로 재생됩니다.",outs:[["next","Next"]]},
+      {id:"listen",type:"listen",x:258,y:318,title:"기사 발화 듣기",desc:`서버 VAD(Silero)가 발화 시작·끝을 감지하고 Amazon Transcribe 스트리밍이 전사합니다. 무음 ${CFG?CFG.vad.silence_ms:700}ms, 문장 끝(~요/~다/~까)이면 ${CFG?CFG.vad.short_silence_ms:350}ms에 턴 종료.`,outs:[["final","최종 전사"]]},
+      {id:"jev",type:"jev",x:490,y:200,title:"의도·특이사항 분류",dim:A,desc:"Jev 1.14 System One이 의도(6지선다)와 특이사항 유형(7지선다)을 확률과 함께 분류하고, 시간은 공통 파서가 추출합니다. 신뢰도 < 0.8, 업무 외, 시간 표현 2개 이상, 오류면 Haiku로 넘깁니다.",outs:[["ok","확신 → 템플릿"],["fb","fallback"]]},
+      {id:"haiku",type:"haiku",x:490,y:440,title:A?"판단 + 응답 생성":"Haiku fallback",desc:A?"Claude Haiku가 매 턴 의도·슬롯·행동·응답을 JSON으로 생성합니다 (스트리밍).":"Jev가 확신하지 못한 턴만 Claude Haiku가 판단과 응답을 생성합니다.",outs:[["ok","결정"]]},
+      {id:"rules",type:"rules",x:722,y:214,title:"규칙 엔진",desc:"엔진 제안을 검증하는 결정적 규칙: 슬롯 검증(공통 파서 우선), 질문 순서 ETA → 특이사항 → 지연, 완료 승인, 담당자 연결(요청·차량 고장/사고·같은 질문 2회 초과·업무 외 3회 초과).",outs:ACTIONS.map(a=>[a,a])},
+      q("ASK_ETA",36,"도착 예정 질문","템플릿 질문: 목적지까지 남은 시간."),
+      q("ASK_ISSUE",126,"특이사항 질문","템플릿 질문: 운행 중 교통 체증·차량 문제 등 특이사항."),
+      q("ASK_DELAY",216,"지연 시간 질문","특이사항이 있을 때만: 그로 인한 지연 시간."),
+      q("CLARIFY",306,"재질문","답이 모호할 때 같은 슬롯을 다시 묻습니다. 2회를 넘기면 규칙 엔진이 담당자 연결로 보냅니다.","loop"),
+      q("ANSWER_OTHER",396,"업무 외 응답","업무와 무관한 말에 짧게 답하고 원래 질문으로 돌아갑니다. 3회를 넘기면 담당자 연결.","loop"),
+      {id:"COMPLETE",type:"basic",x:960,y:500,title:"완료 안내",desc:A?"모든 필수 정보 확보. A: TMS를 먼저 기록하고 Haiku가 결과를 반영해 마무리 문장을 생성합니다.":"모든 필수 정보 확보. B: 템플릿 마무리를 즉시 말하면서 TMS 기록을 병렬로 실행합니다.",outs:[["tool","TMS 기록"]]},
+      {id:"ESCALATE",type:"esc",x:960,y:604,title:"담당자 연결 안내",desc:"확인된 내용을 기록하고 에스컬레이션 티켓을 만든 뒤 Connect의 Escalation 분기로 제어를 돌려줍니다.",outs:[["tool","TMS 기록"]]},
+      {id:"END_CALL",type:"basic",x:960,y:708,title:"종료 요청 응대",desc:"기사가 통화를 끝내려 함. 필수 정보가 다 있으면 COMPLETE, 아니면 확인된 내용까지만 부분 기록(status=partial).",outs:[["tool","TMS 기록"]]},
+      {id:"tool_COMPLETE",type:"tool",x:1180,y:500,title:"update_shipment",desc:"TMS 운송 건 갱신 (status=confirmed). idempotency key로 중복 방지, asyncio.shield로 끼어들기에도 반쯤 쓰이지 않음.",outs:[["ok","Success"],["fail","Failure"]]},
+      {id:"tool_ESCALATE",type:"tool",x:1180,y:604,title:"update + escalation",desc:"TMS 운송 건 갱신(status=escalated) + 에스컬레이션 티켓 생성.",outs:[["ok","Success"],["fail","Failure"]]},
+      {id:"tool_END_CALL",type:"tool",x:1180,y:708,title:"update_shipment",desc:"확인된 내용까지만 부분 기록 (status=partial).",outs:[["ok","Success"],["fail","Failure"]]},
+      {id:"end_COMPLETE",type:"end",x:1394,y:500,title:"종료 · COMPLETE",desc:"정상 완료. Connect에 COMPLETE로 협업 종료를 알립니다.",outs:[]},
+      {id:"end_ESCALATE",type:"end",x:1394,y:604,title:"Connect로 반환",desc:"ESCALATE: Connect Customer Flow의 Escalation 분기로 넘어가 사람 상담원에게 연결됩니다.",outs:[]},
+      {id:"end_END_CALL",type:"end",x:1394,y:708,title:"종료 · 기사 요청",desc:"기사 요청으로 종료 (부분 기록).",outs:[]},
+    ];
+  }
+  function edgesDef(){
+    const A=engine==="haiku_only";
+    const es=[["start","next","greet"],["greet","next","listen"],
+      ["listen","final","jev",A?"hide":""],["listen","final","haiku",A?"":"hide"],
+      ["jev","ok","rules",A?"hide":""],["jev","fb","haiku",A?"hide":""],["haiku","ok","rules"]];
+    for(const a of ACTIONS)es.push(["rules",a,a]);
+    for(const a of ["ASK_ETA","ASK_ISSUE","ASK_DELAY","CLARIFY","ANSWER_OTHER"])es.push([a,"next","listen","loop"]);
+    for(const a of ["COMPLETE","ESCALATE","END_CALL"]){es.push([a,"tool","tool_"+a]);es.push(["tool_"+a,"ok","end_"+a]);es.push(["tool_"+a,"fail","end_"+a])}
+    return es.map(([from,port,to,kind=""])=>({key:`${from}.${port}>${to}`,from,port,to,kind}));
+  }
+
+  function build(eng){
+    engine=eng||engine;
+    const world=$("world");world.querySelectorAll(".nd").forEach(n=>n.remove());
+    world.style.width=W+"px";world.style.height=H+"px";
+    const svg=$("edges");svg.setAttribute("width",W);svg.setAttribute("height",H);svg.innerHTML="";
+    for(const k in N)delete N[k];
+    for(const d of defs()){
+      const el=document.createElement("div");el.className=`nd t-${d.type}`+(d.dim?" dim":"");el.style.left=d.x+"px";el.style.top=d.y+"px";el.dataset.id=d.id;
+      el.innerHTML=`<i class="in"></i><div class="hd"><span>${TYPES[d.type]}</span><span class="cnt"></span></div><div class="ti">${esc(d.title)}</div><div class="st">${d.dim?"B 엔진 전용":""}</div>`+
+        (d.outs.length?`<div class="outs">${d.outs.map(([p,l])=>`<div class="o" data-p="${p}"><span>${esc(l)}</span><i></i></div>`).join("")}</div>`:"");
+      el.onclick=e=>{e.stopPropagation();select(d.id,true)};
+      world.appendChild(el);N[d.id]={def:d,el};
+    }
+    E=edgesDef();
+    requestAnimationFrame(()=>{drawEdges();fit()});
+    resetCall();
+  }
+  function portXY(id,port){const n=N[id],el=n.el;
+    if(port){const p=el.querySelector(`.o[data-p="${port}"] i`);return [n.def.x+p.offsetLeft+p.offsetWidth/2+ (p.offsetParent===el?0:p.offsetParent.offsetLeft), n.def.y+p.offsetTop+p.offsetHeight/2+(p.offsetParent===el?0:p.offsetParent.offsetTop)]}
+    return [n.def.x,n.def.y+11]}
+  function rounded(pts,r=10){let d=`M${pts[0][0]},${pts[0][1]}`;
+    for(let i=1;i<pts.length-1;i++){const [x0,y0]=pts[i-1],[x1,y1]=pts[i],[x2,y2]=pts[i+1];
+      const a=Math.min(r,Math.hypot(x1-x0,y1-y0)/2),b=Math.min(r,Math.hypot(x2-x1,y2-y1)/2);
+      const ux=(x1-x0)/(Math.hypot(x1-x0,y1-y0)||1),uy=(y1-y0)/(Math.hypot(x1-x0,y1-y0)||1),vx=(x2-x1)/(Math.hypot(x2-x1,y2-y1)||1),vy=(y2-y1)/(Math.hypot(x2-x1,y2-y1)||1);
+      d+=` L${x1-ux*a},${y1-uy*a} Q${x1},${y1} ${x1+vx*b},${y1+vy*b}`}
+    const l=pts[pts.length-1];return d+` L${l[0]},${l[1]}`}
+  function drawEdges(){
+    const svg=$("edges");svg.innerHTML="";
+    for(const e of E){
+      const [x1,y1]=portXY(e.from,e.port);let d;
+      if(e.kind==="loop"){const t=N.listen.def,xb=1166,xl=t.x+NW/2;d=rounded([[x1,y1],[xb,y1],[xb,BUS],[xl,BUS],[xl,t.y-2]])}
+      else{const [x2,y2]=portXY(e.to);const dx=Math.max(36,(x2-x1)/2);
+        if(x2>x1+20)d=`M${x1},${y1} C${x1+dx},${y1} ${x2-dx},${y2} ${x2},${y2}`;
+        else{const t=N[e.to].def,tx=t.x+NW/2,ty=t.y;d=rounded([[x1,y1],[x1+16,y1],[x1+16,ty-16],[tx,ty-16],[tx,ty-2]])}}
+      const p=document.createElementNS("http://www.w3.org/2000/svg","path");p.setAttribute("d",d);e.el=p;svg.appendChild(p);
+    }
+    paint();
+  }
+  // ---- view: fit / zoom / pan ----
+  function apply(){$("world").style.transform=`translate(${view.x}px,${view.y}px) scale(${view.s})`}
+  function fit(){const vp=$("vp"),s=Math.min(vp.clientWidth/(W+20),vp.clientHeight/(H+20));view={s,x:(vp.clientWidth-W*s)/2,y:(vp.clientHeight-H*s)/2};apply()}
+  function zoom(f,cx,cy){const vp=$("vp");cx??=vp.clientWidth/2;cy??=vp.clientHeight/2;const s=Math.max(.25,Math.min(2.2,view.s*f));
+    view.x=cx-(cx-view.x)*s/view.s;view.y=cy-(cy-view.y)*s/view.s;view.s=s;apply()}
+  (()=>{const vp=$("vp");let drag=null;
+    vp.addEventListener("pointerdown",e=>{if(e.target.closest(".nd"))return;drag={x:e.clientX-view.x,y:e.clientY-view.y};vp.classList.add("drag");vp.setPointerCapture(e.pointerId)});
+    vp.addEventListener("pointermove",e=>{if(drag){view.x=e.clientX-drag.x;view.y=e.clientY-drag.y;apply()}});
+    vp.addEventListener("pointerup",()=>{drag=null;vp.classList.remove("drag")});
+    vp.addEventListener("wheel",e=>{e.preventDefault();const r=vp.getBoundingClientRect();zoom(e.deltaY<0?1.1:1/1.1,e.clientX-r.left,e.clientY-r.top)},{passive:false});
+    vp.addEventListener("click",()=>{});
+    $("z-fit").onclick=fit;$("z-in").onclick=()=>zoom(1.2);$("z-out").onclick=()=>zoom(1/1.2);
+    $("f-follow").onclick=()=>{follow=!follow;$("f-follow").classList.toggle("on",follow);if(follow&&active.size)select([...active].pop())};
+    addEventListener("resize",()=>fit());
+  })();
+
+  // ---- live state ----
+  function resetCall(){callEdges=new Set();turnEdges=new Set();live=null;active=new Set();visited=new Set();counts={};D={};lastAction=null;judge=null;playing=false;opening=true;
+    for(const id in N){status(id,N[id].def.dim?"B 엔진 전용":"");N[id].el.querySelectorAll(".o").forEach(o=>o.classList.remove("taken"))}
+    paint();select("start",false)}
+  function det(id){return D[id]??={kv:{},mods:[],calls:[],msg:""}}
+  function status(id,t,warn){const n=N[id];if(!n)return;n.el.querySelector(".st").innerHTML=t;n.el.classList.toggle("warn",!!warn)}
+  function go(from,port,to){const e=E.find(e=>e.from===from&&e.port===port&&e.to===to);if(!e)return;
+    callEdges.add(e.key);turnEdges.add(e.key);live=e.key;N[from].el.querySelector(`.o[data-p="${port}"]`)?.classList.add("taken");paint()}
+  function activate(id,st,keep){if(!N[id])return;if(!keep)active.clear();active.add(id);visited.add(id);if(st!=null)status(id,st);paint();if(follow)select(id)}
+  function settle(id){active.delete(id);paint()}
+  function newTurn(){turnEdges=new Set();live=null;for(const id in N)N[id].el.querySelectorAll(".o").forEach(o=>o.classList.remove("taken"));staleTurn=curTurn;curTurn=null}
+  function paint(){
+    for(const e of E){if(!e.el)continue;let c="e";if(e.kind==="hide")c+=" hide";else if(e.key===live)c+=" live";else if(turnEdges.has(e.key))c+=" turn";else if(callEdges.has(e.key))c+=" call";e.el.setAttribute("class",c)}
+    // live/turn edges drawn last so they sit on top
+    const svg=$("edges");for(const e of E)if(e.el&&(turnEdges.has(e.key)||e.key===live))svg.appendChild(e.el);
+    for(const id in N){const el=N[id].el;el.classList.toggle("active",active.has(id));el.classList.toggle("visited",visited.has(id)&&!active.has(id));
+      el.querySelector(".cnt").textContent=counts[id]>1?`×${counts[id]}`:"";}
+  }
+  function select(id,manual){sel=id;for(const k in N)N[k].el.classList.toggle("sel",k===id);if(manual&&follow){follow=false;$("f-follow").classList.remove("on")}inspect()}
+  function inspect(){
+    const n=N[sel];if(!n)return;const d=n.def,x=D[sel]||{kv:{},mods:[],calls:[],msg:""};
+    let h=`<div class="ih"><span class="pill" style="background:var(--h-${d.type})${d.type==="start"?";color:var(--h-start-ink)":""}">${TYPES[d.type]}</span>`+
+      `<span>${visited.has(sel)?(counts[sel]>1?`방문 ${counts[sel]}회`:"방문함"):"아직 지나가지 않음"}</span>${active.has(sel)?'<span class="badge" style="border-color:var(--flow);color:var(--flow)">진행 중</span>':""}</div>`+
+      `<h3>${esc(d.title)}</h3><p class="desc">${esc(d.desc)}</p>`;
+    if(x.calls.length)h+=`<h4>모델 호출</h4>`+x.calls.map(c=>`<div class="callrow"><span>${esc(mname(c.model))} · ${esc(c.purpose)}</span><span>${c.ms==null?"진행 중…":(c.ok?"✓ ":"✗ ")+Math.round(c.ms)+"ms"}</span></div>`).join("");
+    const kv=Object.entries(x.kv);if(kv.length)h+=`<h4>실시간</h4><dl>${kv.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${v}</dd>`).join("")}</dl>`;
+    if(x.mods.length)h+=`<h4>{✓} 상태 변경</h4>`+x.mods.map(m=>`<div class="mod">Set <span class="k">${esc(m[0])}</span> → <span class="v">${esc(m[1])}</span></div>`).join("");
+    if(x.msg)h+=`<h4>메시지</h4><div class="msgbox">${esc(x.msg)}</div>`;
+    $("insp").innerHTML=h;
+  }
+  const rerender=()=>{if(sel)inspect()};
+  function chips(s,tms){$("slotchips").innerHTML=`ETA <b>${mins(s.eta_minutes)}</b> · 특이사항 <b>${esc(s.issue?ISSUE[s.issue]||s.issue:"–")}</b> · 지연 <b>${s.issue==="none"?"해당 없음":mins(s.delay_minutes)}</b> · TMS <b>${tms?"✔":"–"}</b>`}
+
+  function onStage(d){
+    switch(d.stage){
+      case "decide_start":judge=engine==="haiku_only"?"haiku":"jev";go("listen","final",judge);settle("listen");activate(judge,"판단 중…");det(judge).calls=[];if(judge==="jev")det("haiku").calls=[];break;
+      case "model_start":{
+        if(d.purpose==="fallback"){go("jev","fb","haiku");status("jev","fallback →",true);judge="haiku";activate("haiku","fallback 판단 중…")}
+        const target=d.purpose==="compose"?(lastAction||"COMPLETE"):judge;det(target).calls.push({model:d.model,purpose:d.purpose,ms:null});
+        if(d.purpose==="compose")status(target,"Haiku 마무리 생성 중…");rerender();break}
+      case "model_end":{const target=d.purpose==="compose"?(lastAction||"COMPLETE"):(d.purpose==="fallback"?"haiku":judge);const c=[...det(target).calls].reverse().find(c=>c.model===d.model&&c.ms==null);
+        if(c){c.ms=d.ms;c.ok=d.ok}if(d.purpose!=="compose")status(target===judge?judge:target,`${mname(d.model)} ${d.ok?"✓":"✗"} ${Math.round(d.ms)}ms`);rerender();break}
+      case "decided":{const j=judge||"haiku";const x=det(j);x.kv["의도"]=esc(d.intent||"–")+(d.confidence!=null?` <span style="color:var(--ink2)">(${d.confidence.toFixed(2)})</span>`:"");
+        x.kv["제안 행동"]=esc(d.proposed_action);x.kv["출처"]=esc(d.source);x.kv["판단 시간"]=Math.round(d.ms)+"ms";
+        if(d.fallback_reason){det("jev").kv["fallback 이유"]=`<span class="badge">${esc(d.fallback_reason)}</span>`}
+        go(j,"ok","rules");settle(j);if(j==="haiku"&&engine!=="haiku_only")settle("jev");activate("rules","적용 중…");break}
+      case "rules":{
+        const s=d.slots||{};chips(s,false);
+        if(opening){opening=false;go("start","next","greet");counts.greet=1;activate("greet","말하는 중");lastAction="greet";det("greet");break}
+        const x=det("rules");x.kv["결정"]=`<b>${esc(d.action)}</b>`+(d.overridden?` <span class="badge">override ← ${esc(d.proposed_action)}</span>`:"");
+        x.kv["이유"]=(d.reasons||[]).map(esc).join(", ")||"–";x.kv["다음 슬롯"]=esc(s.pending||"없음");
+        x.kv["재질문"]=esc(JSON.stringify(d.reprompts||{}));x.kv["업무 외"]=d.off_topic??0;
+        if(d.finish)x.kv["종료"]=`<span class="fin">${esc(d.finish)} (${esc(d.finish_reason)})</span>`;
+        x.mods=(d.filled||[]).map(k=>k==="eta"?["eta_minutes",mins(s.eta_minutes)]:k==="issue"?["issue",ISSUE[s.issue]||s.issue]:["delay_minutes",mins(s.delay_minutes)]);
+        status("rules",esc(d.action)+(d.overridden?" (override)":""),d.overridden);
+        go("rules",d.action,d.action);settle("rules");counts[d.action]=(counts[d.action]||0)+1;lastAction=d.action;
+        const y=det(d.action);y.msg="";y.kv={};y.calls=y.calls.filter(c=>c.purpose!=="compose");activate(d.action,"응답 준비");
+        if(d.action==="CLARIFY")status("CLARIFY",`응답 준비 · 재질문 ${Object.values(d.reprompts||{}).reduce((a,b)=>a+b,0)}`);
+        if(d.action==="ANSWER_OTHER")status("ANSWER_OTHER",`응답 준비 · 업무 외 ${d.off_topic}`);break}
+      case "reply":if(lastAction)det(lastAction).kv["응답"]=d.source==="template"?"템플릿":"Haiku 생성";if(d.tools&&d.tools.length&&lastAction)det(lastAction).kv["도구"]=esc(d.tools.join(", "))+(d.parallel_tools?" (발화와 병렬)":" (응답 전 순차)");rerender();break;
+    }
+  }
+  let t0tool=0;
+  function on(m){
+    if(m.turn_id){if(m.turn_id===staleTurn)return;if(!curTurn)curTurn=m.turn_id}
+    switch(m.type){
+      case "ready":engine=m.engine;build(m.engine);activate("start","연결됨");Object.assign(det("start").kv,{"세션":esc(m.session_id),"엔진":esc(m.engine),"목소리":esc(`${m.voice}/${m.polly_engine}`)});rerender();break;
+      case "speech_start":{newTurn();if(lastAction&&LOOPERS.has(lastAction)){go(lastAction,"next","listen");settle(lastAction)}
+        const x=det("listen");x.kv={};x.msg="";counts.listen=(counts.listen||0)+1;activate("listen","말하는 중…");break}
+      case "partial":det("listen").msg=m.text;status("listen","…"+esc((m.text||"").slice(-18)));rerender();break;
+      case "end_of_turn":det("listen").kv["턴 종료"]=`${m.rule==="short"?"문장 끝":m.rule==="long"?"무음":esc(m.rule)} · 무음 ${m.silence_ms}ms`;status("listen","STT 확정 중…");rerender();break;
+      case "noise":status("listen","잡음 — 무시");det("listen").kv["결과"]="전사 없음 (잡음)";rerender();break;
+      case "user_final":{if(m.typed){newTurn();if(lastAction&&LOOPERS.has(lastAction)){go(lastAction,"next","listen");settle(lastAction)}counts.listen=(counts.listen||0)+1;const x=det("listen");x.kv={"입력":"텍스트 (STT 생략)"};activate("listen")}
+        det("listen").msg=m.text;status("listen","“"+esc(m.text.slice(0,22))+(m.text.length>22?"…":"")+"”");rerender();break}
+      case "stage":onStage(m.data);break;
+      case "text_done":if(lastAction){const x=det(lastAction);x.msg=(x.msg?x.msg+" ":"")+m.text;rerender()}break;
+      case "tool_started":if(lastAction){t0tool=performance.now();const t="tool_"+lastAction;go(lastAction,"tool",t);activate(t,"실행 중…",true);det(t).kv={"도구":esc((m.data.tools||[]).join(", "))}}break;
+      case "tool_result":if(lastAction){const t="tool_"+lastAction,ms=Math.round(performance.now()-t0tool),ok=!!m.data.ok;status(t,(ok?"✓ 성공 ":"✗ 실패 ")+ms+"ms",!ok);
+        const x=det(t);x.kv["결과"]=ok?"성공":`<span class="badge">실패</span> ${esc(JSON.stringify(m.data).slice(0,160))}`;x.kv["시간"]=ms+"ms";
+        if(m.data.tms&&m.data.tms.record_id)x.kv["record"]=esc(m.data.tms.record_id);go(t,ok?"ok":"fail","end_"+lastAction);settle(t);rerender()}break;
+      case "finish":{const a=lastAction,end="end_"+a;if(N[end]){if(!visited.has("tool_"+a)){go(a,"tool","tool_"+a);status("tool_"+a,"건너뜀");go("tool_"+a,"ok",end)}
+        det(end).kv={"유형":esc(m.data.type),"사유":esc(m.data.reason)};activate(end,esc(m.data.reason),true)}break}
+      case "audio_clear":if(lastAction){status(lastAction,"끼어들기로 중단",true);playing=false}break;
+      case "voice_metrics":{const l=det("listen");l.kv["발화 길이"]=m.speech_ms+"ms";l.kv["턴 종료 대기"]=fmt(m.endpoint_ms)+"ms";l.kv["STT 확정"]=fmt(m.stt_final_ms)+"ms";
+        if(m.carried)l.kv["이어 말하기"]=esc(m.carried);
+        if(lastAction&&det(lastAction)){const y=det(lastAction);y.kv["엔진 → 첫 문장"]=fmt(m.engine_ms)+"ms";y.kv["TTS 첫 소리"]=fmt(m.tts_first_audio_ms)+"ms";y.kv["캐시"]=`${m.tts_cached}/${m.tts_clips}`;y.kv["말 끝 → 첫 소리"]=`<b>${fmt(m.response_ms)}ms</b>`}
+        rerender();break}
+      case "state":{const x=m.data;chips(x.slots,x.tms_updated);const r=det("rules");r.kv["슬롯"]=`ETA ${mins(x.slots.eta_minutes)} · ${esc(x.slots.issue?ISSUE[x.slots.issue]||x.slots.issue:"–")} · 지연 ${mins(x.slots.delay_minutes)}`;rerender();break}
+      case "call_ended":for(const id of [...active])if(!id.startsWith("end_"))settle(id);break;
+    }
+  }
+  function audio(){if(lastAction&&!playing){playing=true;status(lastAction,"말하는 중…");if(!active.has(lastAction))activate(lastAction,null,true)}}
+  setInterval(()=>{if(playing&&ac&&ac.currentTime>=nextT-0.02&&!sources.length){playing=false;
+    if(lastAction&&LOOPERS.has(lastAction)&&!ended){status(lastAction,"말함 ✓");go(lastAction,"next","listen");settle(lastAction);activate("listen","대기 — 말씀하세요")}
+    else if(lastAction)status(lastAction,"말함 ✓")}},120);
+  return {build,on,audio};
+})();
+
+// =====================================================================================================
+const WORKLET=`class Cap extends AudioWorkletProcessor{constructor(){super();this.r=sampleRate/${16000};this.t=0;this.acc=0;this.n=0;this.buf=new Int16Array(512);this.k=0}
+process(ins){const ch=ins[0]&&ins[0][0];if(!ch)return true;for(let i=0;i<ch.length;i++){this.acc+=ch[i];this.n++;this.t+=1;if(this.t>=this.r){this.t-=this.r;let v=this.acc/this.n;this.acc=0;this.n=0;
+v=v<-1?-1:v>1?1:v;this.buf[this.k++]=v<0?v*32768:v*32767;if(this.k===512){const b=this.buf.slice();this.port.postMessage(b.buffer,[b.buffer]);this.k=0}}}return true}}
+registerProcessor("cap",Cap);`;
+
+async function startAudio(){
+  ac=ac||new AudioContext();await ac.resume();
+  if(!node){
+    await ac.audioWorklet.addModule(URL.createObjectURL(new Blob([WORKLET],{type:"text/javascript"})));
+    mic=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}});
+    node=new AudioWorkletNode(ac,"cap");const g=ac.createGain();g.gain.value=0;
+    ac.createMediaStreamSource(mic).connect(node);node.connect(g).connect(ac.destination);
+  }
+  node.port.onmessage=e=>{if(ws&&ws.readyState===1&&inCall)ws.send(e.data)};
+}
+function play(buf){
+  const i16=new Int16Array(buf),f=new Float32Array(i16.length);for(let i=0;i<i16.length;i++)f[i]=i16[i]/32768;
+  const ab=ac.createBuffer(1,f.length,CFG.sample_rate);ab.copyToChannel(f,0);
+  const s=ac.createBufferSource();s.buffer=ab;s.connect(ac.destination);
+  nextT=Math.max(nextT,ac.currentTime+0.03);s.start(nextT);nextT+=ab.duration;
+  sources.push(s);s.onended=()=>{sources=sources.filter(x=>x!==s)};
+}
+function clearAudio(){for(const s of sources){try{s.stop()}catch(e){}}sources=[];nextT=0}
+
+function add(role,text,meta){const d=document.createElement("div");d.className="msg "+role;d.textContent=text;
+  const m=document.createElement("div");m.className="meta";if(meta)m.innerHTML=meta;d.appendChild(m);
+  $("log").appendChild(d);$("log").scrollTop=$("log").scrollHeight;return d}
+function bar(v){const total=v.response_ms||1,eng=v.engine==="haiku_only"?"a":"b";
+  const segs=[["endpoint_ms","seg-end"],["stt_final_ms","seg-stt"],["engine_ms",eng],["tts_first_audio_ms","seg-tts"]];
+  const scale=Math.max(total,4000);
+  return `<div class="bar" style="width:${Math.min(100,total/scale*100)}%">`+segs.map(([k,c])=>`<span title="${k} ${fmt(v[k])}ms" style="width:${(v[k]||0)/total*100}%;background:var(--${c})"></span>`).join("")+`</div>`+
+    `응답 <b>${fmt(v.response_ms)}ms</b> = 턴종료 ${fmt(v.endpoint_ms)} (${v.eot_rule}) + STT ${fmt(v.stt_final_ms)} + 엔진 ${fmt(v.engine_ms)} + TTS ${fmt(v.tts_first_audio_ms)}`+
+    ` · 캐시 ${v.tts_cached}/${v.tts_clips}`+(v.filler?` · 대기멘트 ${fmt(v.first_audio_ms)}ms`:"")+` · $${v.cost_usd.total.toFixed(5)}`+(v.carried?`<br>이어 말하기 합침: “${esc(v.carried)}”`:"")}
+function summary(){
+  const tb=$("sum");tb.innerHTML="";let cost={llm:0,stt:0,tts:0};
+  for(const e of ["haiku_only","jev_haiku"]){const r=rows.filter(x=>x.engine===e);if(!r.length)continue;
+    const p=k=>fmt(median(r.map(x=>x[k]).filter(x=>x!=null)));
+    const c=r.reduce((a,x)=>a+x.tts_cached,0),n=r.reduce((a,x)=>a+x.tts_clips,0);
+    tb.insertAdjacentHTML("beforeend",`<tr><td>${e==="haiku_only"?"A":"B"}</td><td>${r.length}</td><td><b>${p("response_ms")}</b></td><td>${p("engine_ms")}</td><td>${p("stt_final_ms")}</td><td>${p("tts_first_audio_ms")}</td><td>${c}/${n}</td></tr>`)}
+  for(const r of rows)for(const k in cost)cost[k]+=r.cost_usd[k];
+  $("cost").textContent=rows.length?`누적 비용(추정): LLM $${cost.llm.toFixed(5)} · STT $${cost.stt.toFixed(5)} · TTS $${cost.tts.toFixed(5)}`:"";
+}
+
+function onEvent(m){
+  FLOW.on(m);
+  switch(m.type){
+    case "ready":$("status").textContent=`통화 중 · ${m.engine} · ${m.voice}/${m.polly_engine}`;break;
+    case "vad":$("meter").firstChild.style.width=(m.p*100)+"%";$("meter").classList.toggle("on",m.speech);break;
+    case "speech_start":$("caption").textContent="듣는 중…";break;
+    case "partial":$("caption").textContent=m.text||"듣는 중…";break;
+    case "end_of_turn":$("caption").textContent+=`  ⏎ (${m.rule}, 무음 ${m.silence_ms}ms)`;break;
+    case "noise":$("caption").textContent=`(전사 없음 — 잡음으로 보고 무시, ${m.audio_s}s)`;break;
+    case "user_final":add("driver",m.text,m.typed?"텍스트 입력":"");$("caption").textContent="";break;
+    case "text_done":lastAgent=add("agent",m.text);break;
+    case "turn_end":{const x=m.data.metrics;if(lastAgent&&x&&x.action){lastAgent.querySelector(".meta").insertAdjacentHTML("afterbegin",
+      `<span class="tag">${x.action}</span>`+(x.source?`<span class="tag">${x.source}</span>`:"")+(x.fallback?`<span class="tag">fallback: ${x.fallback_reason}</span>`:"")+"<br>")}break}
+    case "voice_metrics":rows.push(m);if(lastAgent)lastAgent.querySelector(".meta").insertAdjacentHTML("beforeend",bar(m));summary();break;
+    case "audio_clear":clearAudio();if(lastAgent){lastAgent.classList.add("cut");lastAgent.querySelector(".meta").insertAdjacentHTML("beforeend","<br>끼어들기로 재생 중단")}break;
+    case "finish":if(lastAgent)lastAgent.querySelector(".meta").insertAdjacentHTML("beforeend",`<br><span class="fin">FINISH ${m.data.type} (${m.data.reason})</span>`);break;
+    case "call_ended":ended=true;$("status").textContent=`통화 종료 · ${m.outcome}`;hangupUI();break;
+    case "error":add("agent",`[${m.where}] ${m.message}`).classList.add("err");break;
+  }
+}
+function hangupUI(){inCall=false;$("call").textContent="통화 시작";$("call").className="primary";$("meter").firstChild.style.width="0"}
+
+async function call(){
+  if(inCall){ws&&ws.send(JSON.stringify({type:"stop"}));clearAudio();hangupUI();$("status").textContent="종료";return}
+  try{await startAudio()}catch(e){add("agent","마이크를 열 수 없습니다: "+e.message).classList.add("err");}
+  $("log").innerHTML="";$("caption").textContent="";lastAgent=null;ended=false;clearAudio();
+  if(!ws||ws.readyState>1){
+    ws=new WebSocket((location.protocol==="https:"?"wss://":"ws://")+location.host+"/voice/ws");ws.binaryType="arraybuffer";
+    ws.onmessage=e=>{if(typeof e.data==="string")onEvent(JSON.parse(e.data));else if(ac){play(e.data);FLOW.audio()}};
+    ws.onclose=()=>{hangupUI();$("status").textContent="연결 끊김"};
+    await new Promise((ok,no)=>{ws.onopen=ok;ws.onerror=no});
+  }
+  const [voice,pe]=$("voice").value.split("/");
+  inCall=true;$("call").textContent="통화 종료";$("call").className="hang";
+  ws.send(JSON.stringify({type:"start",engine:$("engine").value,voice,polly_engine:pe,barge_in:$("barge").checked,filler:$("filler").checked,
+    silence_ms:+$("sil").value,short_silence_ms:+$("ssil").value}));
+}
+$("call").onclick=call;
+$("f").onsubmit=e=>{e.preventDefault();const t=$("t").value.trim();if(t&&ws&&inCall){ws.send(JSON.stringify({type:"text",text:t}));$("t").value=""}};
+init();
+</script>
+</body>
+</html>

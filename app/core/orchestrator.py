@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from app.config import get_settings
+from app.core import progress
 from app.core.decision import Decision, ModelCall
 from app.core.events import EventType, InputKind, InputMessage, OutputEvent, new_id
 from app.core.rules import Resolution, resolve
@@ -87,6 +88,9 @@ class Orchestrator:
         text = responses.render(Action.GREET_ASK_ETA, st)
         st.history.append(Turn(role="agent", text=text, action=Action.GREET_ASK_ETA.value))
         st.last_action = Action.GREET_ASK_ETA
+        yield self._stage(msg, "rules", action=Action.GREET_ASK_ETA.value, overridden=False, reasons=[], filled=[],
+                          finish=None, finish_reason=None, **self._flow(st))
+        yield self._stage(msg, "reply", source="template", tools=[])
         mid = new_id("msg-")
         for chunk in split_sentences(text):
             yield self._ev(EventType.TEXT_CHUNK, msg, text=chunk, message_id=mid)
@@ -106,11 +110,15 @@ class Orchestrator:
         spans: list[_Span] = []
 
         # ---- 1. decide ----
+        yield self._stage(msg, "decide_start", engine=sess.engine_name)
         if msg.kind == InputKind.SILENCE or not text.strip():
             d = Decision(action=Action.CLARIFY, source="rule:silence")
         else:
             try:
-                d = await engine.decide(st, text)
+                box: list[Decision] = []
+                async for ev in self._with_progress(engine.decide(st, text), box, msg):
+                    yield ev
+                d = box[0]
             except Exception as e:  # engine totally failed: re-ask with a template rather than drop the call
                 call = getattr(e, "call", None)
                 d = Decision(action=Action.CLARIFY, source="error", raw={"error": str(e)[:200]},
@@ -118,10 +126,15 @@ class Orchestrator:
         st.history.append(Turn(role="driver", text=text or "<침묵>"))
         t_decided = time.perf_counter()
         spans += [self._call_span(c) for c in d.calls]
+        yield self._stage(msg, "decided", intent=d.intent, proposed_action=d.action.value, source=d.source,
+                          confidence=d.confidence, fallback_reason=d.fallback_reason, ms=round((t_decided - t0) * 1000, 1))
 
         # ---- 2. rules ----
         res = resolve(st, d, text)
         st.last_action = res.action
+        yield self._stage(msg, "rules", action=res.action.value, proposed_action=d.action.value, overridden=res.overridden,
+                          reasons=res.reasons, filled=sorted(res.filled), finish=res.finish, finish_reason=res.finish_reason,
+                          **self._flow(st))
 
         # ---- 3. reply + tools ----
         use_generated = d.reply is not None and not res.overridden and res.action not in (Action.COMPLETE, Action.ESCALATE, Action.END_CALL)
@@ -134,6 +147,8 @@ class Orchestrator:
         first_ready_ms: float | None = None
         mid = new_id("msg-")
         needs_tool = res.needs_tms or res.needs_escalation_ticket
+        yield self._stage(msg, "reply", source="generated" if use_generated or (res.action == Action.ANSWER_OTHER and d.reply)
+                          else "template", tools=self._tool_names(res), parallel_tools=bool(engine.parallel_tools))
 
         if needs_tool and engine.parallel_tools:
             tool_task = asyncio.ensure_future(self._run_tools(st, res, spans))
@@ -154,7 +169,10 @@ class Orchestrator:
             yield self._ev(EventType.TOOL_STARTED, msg, data={"tools": self._tool_names(res)})
             tool_result, tool_ms = await asyncio.shield(self._run_tools(st, res, spans))
             yield self._ev(EventType.TOOL_RESULT, msg, data=tool_result)
-            final, extra_calls = await engine.compose_after_tool(st, res.action, tool_result, d.reply)
+            box2: list[tuple[str | None, list[ModelCall]]] = []
+            async for ev in self._with_progress(engine.compose_after_tool(st, res.action, tool_result, d.reply), box2, msg):
+                yield ev
+            final, extra_calls = box2[0]
             spans += [self._call_span(c) for c in extra_calls]
             if final:
                 reply = final
@@ -189,6 +207,38 @@ class Orchestrator:
                             "acc.pending": st.pending_slot() or "", "acc.finish": res.finish or "",
                             "_input": text, "_output": reply})
         yield self._ev(EventType.TURN_END, msg, data={"metrics": metrics, "spans": [root.__dict__] + [s.__dict__ for s in spans]})
+
+    # ------------------------------------------------------------------ live progress
+    async def _with_progress(self, aw, box: list, msg: InputMessage) -> AsyncIterator[OutputEvent]:
+        """Run `aw` as a task with a progress sink installed; yield STAGE events while it runs; put the result in box."""
+        q: asyncio.Queue[tuple[str, dict[str, Any]]] = asyncio.Queue()
+        with progress.capture(lambda stage, data: q.put_nowait((stage, data))):
+            task = asyncio.ensure_future(aw)  # the task copies the context (and the sink) now
+        getter: asyncio.Future | None = None
+        try:
+            while True:
+                getter = asyncio.ensure_future(q.get())
+                done, _ = await asyncio.wait({task, getter}, return_when=asyncio.FIRST_COMPLETED)
+                if getter not in done:
+                    break
+                stage, data = getter.result()
+                yield self._stage(msg, stage, **data)
+            while not q.empty():
+                stage, data = q.get_nowait()
+                yield self._stage(msg, stage, **data)
+            box.append(task.result())
+        finally:
+            if getter is not None and not getter.done():
+                getter.cancel()
+            if not task.done():
+                task.cancel()
+
+    def _stage(self, msg: InputMessage, stage: str, **data: Any) -> OutputEvent:
+        return self._ev(EventType.STAGE, msg, data={"stage": stage, **data})
+
+    @staticmethod
+    def _flow(st: CallState) -> dict[str, Any]:
+        return {"slots": st.slots_summary(), "reprompts": dict(st.reprompts), "off_topic": st.off_topic_count}
 
     # ------------------------------------------------------------------ tools
     @staticmethod

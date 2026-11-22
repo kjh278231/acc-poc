@@ -5,3 +5,7 @@ results/raw/
 *.pyc
 .pytest_cache/
 results/tests/
+.cache/
+results/voice/
+deploy/.state.json
+deploy/.secrets

@@ -36,6 +36,8 @@
 
 - `TEXT_CHUNK`는 문장 단위. 같은 `message_id`의 청크가 하나의 메시지 → A2A에서 artifact 하나.
 - `TURN_END.data.metrics`는 턴 지표, `data.spans`는 OTLP로 변환될 스팬(`invoke_agent`, `chat <model>`, `execute_tool <tool>`).
+- `STAGE`는 턴 안의 실시간 진행(`decide_start`, `model_start/end`, `decided`, `rules`, `reply`). LLM 클라이언트가 `core/progress.py`의 ContextVar로 보고하고,
+  오케스트레이터가 판단 중에도 흘려보낸다. 음성 UI의 워크플로 패널용이며 A2A 어댑터는 무시한다.
 
 ## 턴 처리 (`Orchestrator._turn`)
 
